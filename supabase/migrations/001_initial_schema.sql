@@ -52,3 +52,11 @@ select cron.schedule(
 
 -- Para remover o job:
 -- select cron.unschedule('daily-debt-notifications');
+
+-- ─── Secrets necessários na Edge Function (Supabase Dashboard) ───────────────
+-- Vá em: Supabase → Edge Functions → send-debt-notifications → Secrets
+-- Adicione os seguintes secrets:
+--
+-- FCM_PROJECT_ID     = gestor-dedividas
+-- FCM_CLIENT_EMAIL   = firebase-adminsdk-fbsvc@gestor-dedividas.iam.gserviceaccount.com
+-- FCM_PRIVATE_KEY    = (cole a private_key do arquivo JSON da Service Account, com \n literais)
