@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, Plus } from 'lucide-react';
 import { useTransactions } from '../hooks/useTransactions';
+import { localDateToISO } from '../utils/formatters';
 
 export default function TransactionForm({ onClose, initialType = 'despesa', transaction = null }) {
   const { categories, addTransaction, updateTransaction } = useTransactions();
@@ -37,7 +38,7 @@ export default function TransactionForm({ onClose, initialType = 'despesa', tran
       const data = {
         type: form.type,
         amount: parseFloat(form.amount),
-        date: new Date(form.date).toISOString(),
+        date: localDateToISO(form.date),
         categoryId: parseInt(form.categoryId),
         description: form.description.trim(),
         isPaid: form.isPaid,

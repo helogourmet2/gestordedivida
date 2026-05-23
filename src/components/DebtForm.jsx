@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { X, Plus, Save, Settings2, Pencil, Trash2 } from 'lucide-react';
 import { RECURRENCE_OPTIONS } from '../utils/constants';
 import { addDebt, updateDebt } from '../db/database';
-import { toDateInputValue } from '../utils/formatters';
+import { toDateInputValue, localDateToISO } from '../utils/formatters';
 import { useDebtCategories } from '../hooks/useDebtCategories';
 import DebtCategoryForm from './DebtCategoryForm';
 
@@ -41,7 +41,7 @@ export default function DebtForm({ onClose, debt = null }) {
         await updateDebt(debt.id, {
           name: form.name.trim(),
           amount: parseFloat(form.amount),
-          dueDate: new Date(form.dueDate).toISOString(),
+          dueDate: localDateToISO(form.dueDate),
           categoryId: catId,
           recurrence: form.recurrence,
           installments: form.recurrence === 'parcelada' ? parseInt(form.installments) : debt.installments,
@@ -50,7 +50,7 @@ export default function DebtForm({ onClose, debt = null }) {
         await addDebt({
           name: form.name.trim(),
           amount: parseFloat(form.amount),
-          dueDate: form.dueDate,
+          dueDate: form.dueDate, // database.js usa localDateToISO internamente
           categoryId: catId,
           recurrence: form.recurrence,
           installments: form.recurrence === 'parcelada' ? parseInt(form.installments) : null,

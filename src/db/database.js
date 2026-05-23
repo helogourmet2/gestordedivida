@@ -1,6 +1,7 @@
 import Dexie from 'dexie';
 import { syncDebt, deleteDebtSync } from '../lib/supabase';
 import { auth } from '../lib/firebase';
+import { localDateToISO } from '../utils/formatters';
 
 function getCurrentUserId() {
   return auth?.currentUser?.uid ?? null;
@@ -82,7 +83,7 @@ export async function addDebt(debt) {
         ...baseDebt,
         name: `${debt.name} (${i + 1}/${totalInstallments})`,
         amount: installmentAmount,
-        dueDate: dueDate.toISOString(),
+        dueDate: localDateToISO(`${dueDate.getFullYear()}-${String(dueDate.getMonth()+1).padStart(2,'0')}-${String(dueDate.getDate()).padStart(2,'0')}`),
         currentInstallment: i + 1,
         installments: totalInstallments,
         parentId: i === 0 ? null : 'batch',
@@ -97,7 +98,7 @@ export async function addDebt(debt) {
 
   const newDebt = {
     ...baseDebt,
-    dueDate: new Date(debt.dueDate).toISOString(),
+    dueDate: localDateToISO(debt.dueDate),
     installments: debt.recurrence === 'parcelada' ? 1 : null,
     currentInstallment: debt.recurrence === 'parcelada' ? 1 : null,
   };

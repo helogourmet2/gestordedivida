@@ -7,6 +7,7 @@ import {
   daysUntilDueText,
   parseCurrencyInput,
   toDateInputValue,
+  localDateToISO,
 } from '../utils/formatters';
 
 describe('formatCurrency', () => {
@@ -120,5 +121,25 @@ describe('toDateInputValue', () => {
   it('retorna string vazia para valor nulo', () => {
     expect(toDateInputValue(null)).toBe('');
     expect(toDateInputValue(undefined)).toBe('');
+  });
+});
+
+describe('localDateToISO — sem UTC shift', () => {
+  it('preserva o dia 25 ao converter YYYY-MM-DD', () => {
+    const iso = localDateToISO('2026-05-25');
+    // Extrai a data da ISO string e verifica que o dia é 25
+    const dateOnly = new Date(iso).toISOString().split('T')[0];
+    expect(dateOnly).toBe('2026-05-25');
+  });
+
+  it('preserva o dia 01 (início do mês)', () => {
+    const iso = localDateToISO('2026-06-01');
+    const dateOnly = new Date(iso).toISOString().split('T')[0];
+    expect(dateOnly).toBe('2026-06-01');
+  });
+
+  it('retorna null para valor vazio', () => {
+    expect(localDateToISO('')).toBeNull();
+    expect(localDateToISO(null)).toBeNull();
   });
 });
