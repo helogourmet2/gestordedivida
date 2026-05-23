@@ -1,12 +1,19 @@
 import { useState } from 'react';
 import { Bell, BellOff, Trash2, Download, ChevronRight, Info, Smartphone } from 'lucide-react';
 import { useNotifications } from '../hooks/useNotifications';
+import { requestFCMToken } from '../lib/firebase';
 import { db } from '../db/database';
 
 export default function Config() {
   const { notificationsEnabled, requestPermission } = useNotifications();
   const [clearing, setClearing] = useState(false);
   const [cleared, setCleared] = useState(false);
+
+  const handleEnableNotifications = async () => {
+    // Solicita permissão local + obtém token FCM e salva no Supabase
+    await requestPermission();
+    await requestFCMToken();
+  };
 
   const handleClearAll = async () => {
     if (!window.confirm('Tem certeza? Isso vai apagar TODAS as dívidas permanentemente.')) return;
@@ -51,7 +58,7 @@ export default function Config() {
         </h3>
         <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
           <button
-            onClick={requestPermission}
+            onClick={handleEnableNotifications}
             disabled={notificationsEnabled}
             className="w-full flex items-center justify-between p-4 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors disabled:opacity-60"
           >
