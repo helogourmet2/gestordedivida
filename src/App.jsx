@@ -3,6 +3,7 @@ import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Calendario from './pages/Calendario';
 import Dividas from './pages/Dividas';
+import Financas from './pages/Financas';
 import Config from './pages/Config';
 
 const router = createBrowserRouter([
@@ -13,6 +14,7 @@ const router = createBrowserRouter([
       { index: true, element: <Dashboard /> },
       { path: 'calendario', element: <Calendario /> },
       { path: 'dividas', element: <Dividas /> },
+      { path: 'financas', element: <Financas /> },
       { path: 'config', element: <Config /> },
     ],
   },

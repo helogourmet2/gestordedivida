@@ -7,6 +7,27 @@ db.version(1).stores({
   settings: 'key'
 });
 
+db.version(2).stores({
+  debts: '++id, name, amount, dueDate, category, recurrence, installments, currentInstallment, isPaid, paidAt, createdAt, parentId',
+  settings: 'key',
+  transactions: '++id, type, amount, date, categoryId, description, isPaid, paidAt, createdAt',
+  transactionCategories: '++id, name, type, color, icon, isDefault',
+}).upgrade(async tx => {
+  // Seed das categorias padrão
+  await tx.table('transactionCategories').bulkAdd([
+    // Receitas
+    { name: 'Salário',         type: 'receita',  color: 'bg-green-600',   icon: 'Banknote',     isDefault: true },
+    { name: 'Aluguel recebido',type: 'receita',  color: 'bg-emerald-500', icon: 'Home',         isDefault: true },
+    { name: 'Saque cassino',   type: 'receita',  color: 'bg-yellow-500',  icon: 'TrendingUp',   isDefault: true },
+    { name: 'Extra',           type: 'receita',  color: 'bg-blue-500',    icon: 'Plus',         isDefault: true },
+    // Despesas
+    { name: 'Pagamento',       type: 'despesa',  color: 'bg-red-600',     icon: 'CreditCard',   isDefault: true },
+    { name: 'Aluguel',         type: 'despesa',  color: 'bg-orange-500',  icon: 'Home',         isDefault: true },
+    { name: 'Depósito cassino',type: 'despesa',  color: 'bg-purple-500',  icon: 'TrendingDown', isDefault: true },
+    { name: 'Extra',           type: 'despesa',  color: 'bg-neutral-500', icon: 'MoreHorizontal',isDefault: true },
+  ]);
+});
+
 // Adicionar nova dívida
 export async function addDebt(debt) {
   const now = new Date();
@@ -146,4 +167,64 @@ export async function getDashboardMetrics() {
     paidCount: paid.length,
     pendingCount: pending.length,
   };
+}
+
+// ─── Transações (Receitas & Despesas) ────────────────────────────────────────
+
+export async function addTransaction(transaction) {
+  return await db.transactions.add({
+    ...transaction,
+    amount: parseFloat(transaction.amount),
+    isPaid: transaction.isPaid ?? (transaction.type === 'receita'), // receita já entra como recebida por padrão
+    paidAt: transaction.isPaid ? new Date().toISOString() : null,
+    createdAt: new Date().toISOString(),
+  });
+}
+
+export async function updateTransaction(id, changes) {
+  return await db.transactions.update(id, changes);
+}
+
+export async function deleteTransaction(id) {
+  return await db.transactions.delete(id);
+}
+
+export async function markTransactionAsPaid(id) {
+  return await db.transactions.update(id, {
+    isPaid: true,
+    paidAt: new Date().toISOString(),
+  });
+}
+
+export async function markTransactionAsUnpaid(id) {
+  return await db.transactions.update(id, {
+    isPaid: false,
+    paidAt: null,
+  });
+}
+
+export async function getMonthTransactions(year, month) {
+  const start = new Date(year, month, 1).toISOString();
+  const end = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
+  return await db.transactions
+    .where('date')
+    .between(start, end, true, true)
+    .toArray();
+}
+
+// ─── Categorias de Transações ─────────────────────────────────────────────────
+
+export async function addTransactionCategory(category) {
+  return await db.transactionCategories.add({
+    ...category,
+    isDefault: false,
+  });
+}
+
+export async function updateTransactionCategory(id, changes) {
+  return await db.transactionCategories.update(id, changes);
+}
+
+export async function deleteTransactionCategory(id) {
+  return await db.transactionCategories.delete(id);
 }
