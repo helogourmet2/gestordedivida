@@ -2,9 +2,14 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db/database';
 
 export default function CategoryBadge({ categoryId }) {
+  const numId = categoryId != null ? Number(categoryId) : null;
+
   const category = useLiveQuery(
-    () => categoryId ? db.debtCategories.get(Number(categoryId)) : Promise.resolve(null),
-    [categoryId]
+    () => {
+      if (!numId || isNaN(numId)) return Promise.resolve(null);
+      return db.debtCategories.get(numId);
+    },
+    [numId]
   );
 
   if (!category) return null;
