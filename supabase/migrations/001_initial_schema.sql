@@ -37,7 +37,7 @@ select cron.schedule(
   '0 11 * * *',                 -- cron: 11:00 UTC = 08:00 BRT
   $$
     select net.http_post(
-      url     := 'https://SEU_PROJECT_REF.supabase.co/functions/v1/send-debt-notifications',
+      url     := 'https://xdskhspqrqeraqnshuey.supabase.co/functions/v1/send-debt-notifications',
       headers := jsonb_build_object(
         'Content-Type',  'application/json',
         'Authorization', 'Bearer ' || current_setting('app.supabase_service_key')

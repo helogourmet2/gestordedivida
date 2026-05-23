@@ -50,8 +50,17 @@ npm install -g supabase
 supabase login
 
 # Deploy da função
-supabase functions deploy send-debt-notifications --project-ref SEU_PROJECT_REF
+supabase functions deploy send-debt-notifications --project-ref xdskhspqrqeraqnshuey
 ```
+
+Após o deploy, configure os secrets da Edge Function no Supabase Dashboard:
+**Edge Functions → send-debt-notifications → Secrets**
+
+| Secret | Valor |
+|---|---|
+| `FCM_PROJECT_ID` | `gestor-dedividas` |
+| `FCM_CLIENT_EMAIL` | `firebase-adminsdk-fbsvc@gestor-dedividas.iam.gserviceaccount.com` |
+| `FCM_PRIVATE_KEY` | conteúdo do campo `private_key` do arquivo JSON da Service Account |
 
 ### 5. Firebase Hosting
 
