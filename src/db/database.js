@@ -13,19 +13,41 @@ db.version(2).stores({
   transactions: '++id, type, amount, date, categoryId, description, isPaid, paidAt, createdAt',
   transactionCategories: '++id, name, type, color, icon, isDefault',
 }).upgrade(async tx => {
-  // Seed das categorias padrão
+  // Seed das categorias padrão de transações
   await tx.table('transactionCategories').bulkAdd([
-    // Receitas
-    { name: 'Salário',         type: 'receita',  color: 'bg-green-600',   icon: 'Banknote',     isDefault: true },
-    { name: 'Aluguel recebido',type: 'receita',  color: 'bg-emerald-500', icon: 'Home',         isDefault: true },
-    { name: 'Saque cassino',   type: 'receita',  color: 'bg-yellow-500',  icon: 'TrendingUp',   isDefault: true },
-    { name: 'Extra',           type: 'receita',  color: 'bg-blue-500',    icon: 'Plus',         isDefault: true },
-    // Despesas
-    { name: 'Pagamento',       type: 'despesa',  color: 'bg-red-600',     icon: 'CreditCard',   isDefault: true },
-    { name: 'Aluguel',         type: 'despesa',  color: 'bg-orange-500',  icon: 'Home',         isDefault: true },
-    { name: 'Depósito cassino',type: 'despesa',  color: 'bg-purple-500',  icon: 'TrendingDown', isDefault: true },
+    { name: 'Salário',         type: 'receita',  color: 'bg-green-600',   icon: 'Banknote',      isDefault: true },
+    { name: 'Aluguel recebido',type: 'receita',  color: 'bg-emerald-500', icon: 'Home',          isDefault: true },
+    { name: 'Saque cassino',   type: 'receita',  color: 'bg-yellow-500',  icon: 'TrendingUp',    isDefault: true },
+    { name: 'Extra',           type: 'receita',  color: 'bg-blue-500',    icon: 'Plus',          isDefault: true },
+    { name: 'Pagamento',       type: 'despesa',  color: 'bg-red-600',     icon: 'CreditCard',    isDefault: true },
+    { name: 'Aluguel',         type: 'despesa',  color: 'bg-orange-500',  icon: 'Home',          isDefault: true },
+    { name: 'Depósito cassino',type: 'despesa',  color: 'bg-purple-500',  icon: 'TrendingDown',  isDefault: true },
     { name: 'Extra',           type: 'despesa',  color: 'bg-neutral-500', icon: 'MoreHorizontal',isDefault: true },
   ]);
+});
+
+db.version(3).stores({
+  debts: '++id, name, amount, dueDate, categoryId, recurrence, installments, currentInstallment, isPaid, paidAt, createdAt, parentId',
+  settings: 'key',
+  transactions: '++id, type, amount, date, categoryId, description, isPaid, paidAt, createdAt',
+  transactionCategories: '++id, name, type, color, icon, isDefault',
+  debtCategories: '++id, name, color, isDefault',
+}).upgrade(async tx => {
+  // Seed das categorias padrão de dívidas
+  const catIds = await tx.table('debtCategories').bulkAdd([
+    { name: 'Essencial', color: 'bg-red-600',    isDefault: true },
+    { name: 'Cartão',    color: 'bg-orange-500', isDefault: true },
+    { name: 'Lazer',     color: 'bg-purple-500', isDefault: true },
+    { name: 'Outros',    color: 'bg-neutral-500',isDefault: true },
+  ], { allKeys: true });
+
+  // Migrar dívidas existentes: converter category string → categoryId numérico
+  const nameToId = { essencial: catIds[0], cartao: catIds[1], lazer: catIds[2], outros: catIds[3] };
+  const allDebts = await tx.table('debts').toArray();
+  for (const debt of allDebts) {
+    const newCatId = nameToId[debt.category] ?? catIds[3];
+    await tx.table('debts').update(debt.id, { categoryId: newCatId });
+  }
 });
 
 // Adicionar nova dívida
@@ -227,4 +249,23 @@ export async function updateTransactionCategory(id, changes) {
 
 export async function deleteTransactionCategory(id) {
   return await db.transactionCategories.delete(id);
+}
+
+// ─── Categorias de Dívidas ────────────────────────────────────────────────────
+
+export async function addDebtCategory(category) {
+  return await db.debtCategories.add({ ...category, isDefault: false });
+}
+
+export async function updateDebtCategory(id, changes) {
+  return await db.debtCategories.update(id, changes);
+}
+
+export async function deleteDebtCategory(id) {
+  // Reatribuir dívidas dessa categoria para "Outros" (id menor padrão)
+  const outros = await db.debtCategories.filter(c => c.name === 'Outros').first();
+  if (outros) {
+    await db.debts.where('categoryId').equals(id).modify({ categoryId: outros.id });
+  }
+  return await db.debtCategories.delete(id);
 }
