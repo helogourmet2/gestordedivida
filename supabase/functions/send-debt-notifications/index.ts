@@ -8,88 +8,129 @@ import { create, getNumericDate } from 'https://deno.land/x/djwt@v2.8/mod.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-
-// Service Account do Firebase (armazenada como secret no Supabase)
 const FCM_PROJECT_ID = Deno.env.get('FCM_PROJECT_ID') || 'gestor-dedividas';
 const FCM_CLIENT_EMAIL = Deno.env.get('FCM_CLIENT_EMAIL')!;
-const FCM_PRIVATE_KEY = Deno.env.get('FCM_PRIVATE_KEY')!; // chave PEM completa
+const FCM_PRIVATE_KEY = Deno.env.get('FCM_PRIVATE_KEY')!;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-serve(async (req) => {
+serve(async () => {
   try {
-    const { user_id = 'vfk1471' } = await req.json().catch(() => ({}));
+    // Data de hoje e amanhã (UTC)
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
 
-    // Buscar token FCM do usuário
-    const { data: tokenData, error: tokenError } = await supabase
+    const todayStr = today.toISOString().split('T')[0];
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+    // Buscar todos os tokens FCM registrados
+    const { data: tokens, error: tokenError } = await supabase
       .from('fcm_tokens')
-      .select('token')
-      .eq('user_id', user_id)
-      .order('updated_at', { ascending: false })
-      .limit(1)
-      .single();
+      .select('user_id, token');
 
-    if (tokenError || !tokenData) {
-      return new Response(
-        JSON.stringify({ error: 'Token FCM não encontrado para o usuário' }),
-        { status: 404, headers: { 'Content-Type': 'application/json' } }
-      );
+    if (tokenError || !tokens?.length) {
+      return new Response(JSON.stringify({ error: 'Nenhum token FCM encontrado' }), { status: 404 });
     }
 
-    const fcmToken = tokenData.token;
+    // Buscar dívidas vencendo hoje ou amanhã (não pagas)
+    const { data: debts, error: debtError } = await supabase
+      .from('debts')
+      .select('user_id, name, amount, due_date')
+      .eq('is_paid', false)
+      .in('due_date', [todayStr, tomorrowStr]);
 
-    // Gerar access token OAuth2 via Service Account
+    if (debtError) {
+      return new Response(JSON.stringify({ error: debtError.message }), { status: 500 });
+    }
+
+    if (!debts?.length) {
+      return new Response(JSON.stringify({ message: 'Nenhuma dívida vencendo hoje ou amanhã' }), { status: 200 });
+    }
+
+    // Agrupar dívidas por usuário
+    const debtsByUser: Record<string, typeof debts> = {};
+    for (const debt of debts) {
+      if (!debtsByUser[debt.user_id]) debtsByUser[debt.user_id] = [];
+      debtsByUser[debt.user_id].push(debt);
+    }
+
     const accessToken = await getAccessToken();
+    let totalSent = 0;
+    let totalFailed = 0;
 
-    // Calcular datas
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    // Para cada usuário com dívidas, buscar token e enviar push
+    for (const [userId, userDebts] of Object.entries(debtsByUser)) {
+      const tokenRow = tokens.find(t => t.user_id === userId);
+      if (!tokenRow) continue;
 
-    // Montar notificações
-    // Quando a sync com Supabase estiver ativa, buscar dívidas da tabela aqui.
-    // Por ora, envia lembrete diário.
-    const notifications = [
-      {
-        title: '📋 Gestor de Dívidas',
-        body: 'Verifique suas dívidas para hoje e amanhã.',
-        tag: 'daily-reminder',
-      },
-    ];
+      // Separar dívidas de hoje e amanhã
+      const todayDebts = userDebts.filter(d => d.due_date === todayStr);
+      const tomorrowDebts = userDebts.filter(d => d.due_date === tomorrowStr);
 
-    const results = await Promise.allSettled(
-      notifications.map((n) => sendFCMV1(accessToken, fcmToken, n))
-    );
+      const formatBRL = (v: number) =>
+        v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-    const sent = results.filter((r) => r.status === 'fulfilled').length;
-    const failed = results.filter((r) => r.status === 'rejected').length;
+      const notifications = [];
+
+      if (todayDebts.length === 1) {
+        notifications.push({
+          title: '⚠️ Dívida vence HOJE!',
+          body: `${todayDebts[0].name} — ${formatBRL(todayDebts[0].amount)}`,
+          tag: `today-${todayDebts[0].name}`,
+        });
+      } else if (todayDebts.length > 1) {
+        const total = todayDebts.reduce((s, d) => s + d.amount, 0);
+        notifications.push({
+          title: `⚠️ ${todayDebts.length} dívidas vencem HOJE!`,
+          body: `Total: ${formatBRL(total)} — Abra o app para ver`,
+          tag: 'today-multiple',
+        });
+      }
+
+      if (tomorrowDebts.length === 1) {
+        notifications.push({
+          title: '📅 Dívida vence amanhã',
+          body: `${tomorrowDebts[0].name} — ${formatBRL(tomorrowDebts[0].amount)}`,
+          tag: `tomorrow-${tomorrowDebts[0].name}`,
+        });
+      } else if (tomorrowDebts.length > 1) {
+        const total = tomorrowDebts.reduce((s, d) => s + d.amount, 0);
+        notifications.push({
+          title: `📅 ${tomorrowDebts.length} dívidas vencem amanhã`,
+          body: `Total: ${formatBRL(total)} — Abra o app para ver`,
+          tag: 'tomorrow-multiple',
+        });
+      }
+
+      const results = await Promise.allSettled(
+        notifications.map(n => sendFCMV1(accessToken, tokenRow.token, n))
+      );
+
+      totalSent += results.filter(r => r.status === 'fulfilled').length;
+      totalFailed += results.filter(r => r.status === 'rejected').length;
+    }
 
     return new Response(
-      JSON.stringify({ success: true, sent, failed }),
+      JSON.stringify({ success: true, sent: totalSent, failed: totalFailed }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
   } catch (err) {
     console.error('[Edge Function] Erro:', err);
-    return new Response(
-      JSON.stringify({ error: String(err) }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: String(err) }), { status: 500 });
   }
 });
 
-// ─── Gerar Access Token OAuth2 via JWT (Service Account) ─────────────────────
+// ─── OAuth2 via Service Account ───────────────────────────────────────────────
 async function getAccessToken(): Promise<string> {
-  const now = Math.floor(Date.now() / 1000);
-
-  // Importar a chave privada PEM
   const pemKey = FCM_PRIVATE_KEY.replace(/\\n/g, '\n');
   const keyData = pemKey
     .replace('-----BEGIN PRIVATE KEY-----', '')
     .replace('-----END PRIVATE KEY-----', '')
     .replace(/\s/g, '');
 
-  const binaryKey = Uint8Array.from(atob(keyData), (c) => c.charCodeAt(0));
+  const binaryKey = Uint8Array.from(atob(keyData), c => c.charCodeAt(0));
 
   const cryptoKey = await crypto.subtle.importKey(
     'pkcs8',
@@ -133,41 +174,30 @@ async function sendFCMV1(
 ) {
   const url = `https://fcm.googleapis.com/v1/projects/${FCM_PROJECT_ID}/messages:send`;
 
-  const payload = {
-    message: {
-      token,
-      notification: {
-        title: notification.title,
-        body: notification.body,
-      },
-      webpush: {
-        notification: {
-          icon: '/icons/icon-192.png',
-          badge: '/icons/icon-192.png',
-          tag: notification.tag,
-          renotify: true,
-          vibrate: [200, 100, 200],
-        },
-        fcm_options: {
-          link: '/',
-        },
-      },
-    },
-  };
-
   const res = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${accessToken}`,
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      message: {
+        token,
+        notification: { title: notification.title, body: notification.body },
+        webpush: {
+          notification: {
+            icon: '/icons/icon-192.png',
+            badge: '/icons/icon-192.png',
+            tag: notification.tag,
+            renotify: true,
+            vibrate: [200, 100, 200],
+          },
+          fcm_options: { link: '/' },
+        },
+      },
+    }),
   });
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`FCM V1 error ${res.status}: ${text}`);
-  }
-
+  if (!res.ok) throw new Error(`FCM V1 error ${res.status}: ${await res.text()}`);
   return await res.json();
 }

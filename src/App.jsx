@@ -1,5 +1,6 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Layout from './components/Layout';
+import AuthGuard from './components/AuthGuard';
 import Dashboard from './pages/Dashboard';
 import Calendario from './pages/Calendario';
 import Dividas from './pages/Dividas';
@@ -10,7 +11,11 @@ import Config from './pages/Config';
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Layout />,
+    element: (
+      <AuthGuard>
+        <Layout />
+      </AuthGuard>
+    ),
     children: [
       { index: true, element: <Dashboard /> },
       { path: 'calendario', element: <Calendario /> },

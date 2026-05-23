@@ -9,7 +9,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icons/*.png'],
+      includeAssets: ['favicon.png', 'icons/*.png'],
       manifest: {
         name: 'Gestor de Dívidas',
         short_name: 'Dívidas',

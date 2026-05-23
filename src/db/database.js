@@ -1,4 +1,10 @@
 import Dexie from 'dexie';
+import { syncDebt, deleteDebtSync } from '../lib/supabase';
+import { auth } from '../lib/firebase';
+
+function getCurrentUserId() {
+  return auth?.currentUser?.uid ?? null;
+}
 
 export const db = new Dexie('GestorDeDividas');
 
@@ -53,6 +59,7 @@ db.version(3).stores({
 // Adicionar nova dívida
 export async function addDebt(debt) {
   const now = new Date();
+  const uid = getCurrentUserId();
   const baseDebt = {
     ...debt,
     amount: parseFloat(debt.amount),
@@ -66,12 +73,12 @@ export async function addDebt(debt) {
     const ids = [];
     const totalInstallments = parseInt(debt.installments);
     const installmentAmount = parseFloat((baseDebt.amount / totalInstallments).toFixed(2));
-    
+
     for (let i = 0; i < totalInstallments; i++) {
       const dueDate = new Date(debt.dueDate);
       dueDate.setMonth(dueDate.getMonth() + i);
-      
-      const id = await db.debts.add({
+
+      const newDebt = {
         ...baseDebt,
         name: `${debt.name} (${i + 1}/${totalInstallments})`,
         amount: installmentAmount,
@@ -79,44 +86,55 @@ export async function addDebt(debt) {
         currentInstallment: i + 1,
         installments: totalInstallments,
         parentId: i === 0 ? null : 'batch',
-      });
+      };
+      const id = await db.debts.add(newDebt);
       ids.push(id);
+      // Sync em background — não bloqueia a UI
+      syncDebt({ ...newDebt, id }, uid).catch(() => {});
     }
     return ids;
   }
 
-  return await db.debts.add({
+  const newDebt = {
     ...baseDebt,
     dueDate: new Date(debt.dueDate).toISOString(),
     installments: debt.recurrence === 'parcelada' ? 1 : null,
     currentInstallment: debt.recurrence === 'parcelada' ? 1 : null,
-  });
+  };
+  const id = await db.debts.add(newDebt);
+  syncDebt({ ...newDebt, id }, uid).catch(() => {});
+  return id;
 }
 
 // Marcar como paga
 export async function markAsPaid(id) {
-  return await db.debts.update(id, {
-    isPaid: true,
-    paidAt: new Date().toISOString(),
-  });
+  const paidAt = new Date().toISOString();
+  await db.debts.update(id, { isPaid: true, paidAt });
+  const debt = await db.debts.get(id);
+  if (debt) syncDebt(debt, getCurrentUserId()).catch(() => {});
+  return id;
 }
 
 // Marcar como não paga
 export async function markAsUnpaid(id) {
-  return await db.debts.update(id, {
-    isPaid: false,
-    paidAt: null,
-  });
+  await db.debts.update(id, { isPaid: false, paidAt: null });
+  const debt = await db.debts.get(id);
+  if (debt) syncDebt(debt, getCurrentUserId()).catch(() => {});
+  return id;
 }
 
 // Atualizar dívida
 export async function updateDebt(id, changes) {
-  return await db.debts.update(id, changes);
+  await db.debts.update(id, changes);
+  const debt = await db.debts.get(id);
+  if (debt) syncDebt(debt, getCurrentUserId()).catch(() => {});
+  return id;
 }
 
 // Deletar dívida
 export async function deleteDebt(id) {
-  return await db.debts.delete(id);
+  await db.debts.delete(id);
+  deleteDebtSync(id, getCurrentUserId()).catch(() => {});
 }
 
 // Buscar todas as dívidas pendentes ordenadas por vencimento
