@@ -7,7 +7,7 @@ import EmptyState from '../components/EmptyState';
 
 export default function Dashboard() {
   const metrics = useDashboard();
-  const { markAsPaid, markAsUnpaid } = useDebts();
+  const { markAsPaid, markAsUnpaid, deleteDebt } = useDebts();
 
   return (
     <div className="space-y-4">
@@ -40,6 +40,7 @@ export default function Dashboard() {
                 debt={debt}
                 onMarkPaid={markAsPaid}
                 onMarkUnpaid={markAsUnpaid}
+                onDelete={deleteDebt}
                 compact
               />
             ))}

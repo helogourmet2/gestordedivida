@@ -1,16 +1,19 @@
 import { useState } from 'react';
-import { X, Plus } from 'lucide-react';
+import { X, Plus, Save } from 'lucide-react';
 import { CATEGORIES, RECURRENCE_OPTIONS } from '../utils/constants';
-import { addDebt } from '../db/database';
+import { addDebt, updateDebt } from '../db/database';
+import { toDateInputValue } from '../utils/formatters';
 
-export default function DebtForm({ onClose }) {
+export default function DebtForm({ onClose, debt = null }) {
+  const isEditing = !!debt;
+
   const [form, setForm] = useState({
-    name: '',
-    amount: '',
-    dueDate: new Date().toISOString().split('T')[0],
-    category: 'essencial',
-    recurrence: 'unica',
-    installments: 2,
+    name: debt?.name || '',
+    amount: debt?.amount?.toString() || '',
+    dueDate: debt?.dueDate ? toDateInputValue(debt.dueDate) : new Date().toISOString().split('T')[0],
+    category: debt?.category || 'essencial',
+    recurrence: debt?.recurrence || 'unica',
+    installments: debt?.installments || 2,
   });
   const [saving, setSaving] = useState(false);
 
@@ -21,17 +24,28 @@ export default function DebtForm({ onClose }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name.trim() || !form.amount || !form.dueDate) return;
-    
+
     setSaving(true);
     try {
-      await addDebt({
-        name: form.name.trim(),
-        amount: parseFloat(form.amount),
-        dueDate: form.dueDate,
-        category: form.category,
-        recurrence: form.recurrence,
-        installments: form.recurrence === 'parcelada' ? parseInt(form.installments) : null,
-      });
+      if (isEditing) {
+        await updateDebt(debt.id, {
+          name: form.name.trim(),
+          amount: parseFloat(form.amount),
+          dueDate: new Date(form.dueDate).toISOString(),
+          category: form.category,
+          recurrence: form.recurrence,
+          installments: form.recurrence === 'parcelada' ? parseInt(form.installments) : debt.installments,
+        });
+      } else {
+        await addDebt({
+          name: form.name.trim(),
+          amount: parseFloat(form.amount),
+          dueDate: form.dueDate,
+          category: form.category,
+          recurrence: form.recurrence,
+          installments: form.recurrence === 'parcelada' ? parseInt(form.installments) : null,
+        });
+      }
       onClose();
     } catch (error) {
       console.error('Erro ao salvar dívida:', error);
@@ -43,19 +57,21 @@ export default function DebtForm({ onClose }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
       {/* Overlay */}
-      <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+      <div
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onClose}
       />
-      
+
       {/* Modal */}
-      <div className="relative w-full max-w-lg bg-white dark:bg-neutral-900 rounded-t-3xl sm:rounded-3xl p-6 animate-slide-up max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-[#0f2040] rounded-t-3xl sm:rounded-3xl p-6 animate-slide-up max-h-[90vh] overflow-y-auto border border-[#1a3366]">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold">Nova Dívida</h2>
+          <h2 className="text-xl font-bold text-white">
+            {isEditing ? 'Editar Dívida' : 'Nova Dívida'}
+          </h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+            className="p-2 rounded-xl hover:bg-[#152a55] transition-colors text-[#b8cef0]"
           >
             <X size={20} />
           </button>
@@ -64,7 +80,7 @@ export default function DebtForm({ onClose }) {
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Nome */}
           <div>
-            <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-1.5">
+            <label className="block text-sm font-medium text-[#b8cef0] mb-1.5">
               Descrição
             </label>
             <input
@@ -72,7 +88,7 @@ export default function DebtForm({ onClose }) {
               value={form.name}
               onChange={(e) => handleChange('name', e.target.value)}
               placeholder="Ex: Cartão de Crédito, Aluguel..."
-              className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all text-base"
+              className="w-full px-4 py-3 rounded-xl bg-[#152a55] border border-[#1a3366] focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all text-base text-white placeholder-[#6b93d6]"
               autoFocus
               required
             />
@@ -80,7 +96,7 @@ export default function DebtForm({ onClose }) {
 
           {/* Valor */}
           <div>
-            <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-1.5">
+            <label className="block text-sm font-medium text-[#b8cef0] mb-1.5">
               Valor (R$)
             </label>
             <input
@@ -91,28 +107,28 @@ export default function DebtForm({ onClose }) {
               value={form.amount}
               onChange={(e) => handleChange('amount', e.target.value)}
               placeholder="0,00"
-              className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all text-base font-mono"
+              className="w-full px-4 py-3 rounded-xl bg-[#152a55] border border-[#1a3366] focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all text-base font-mono text-white placeholder-[#6b93d6]"
               required
             />
           </div>
 
           {/* Data de Vencimento */}
           <div>
-            <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-1.5">
+            <label className="block text-sm font-medium text-[#b8cef0] mb-1.5">
               Data de Vencimento
             </label>
             <input
               type="date"
               value={form.dueDate}
               onChange={(e) => handleChange('dueDate', e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all text-base"
+              className="w-full px-4 py-3 rounded-xl bg-[#152a55] border border-[#1a3366] focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all text-base text-white"
               required
             />
           </div>
 
           {/* Categoria */}
           <div>
-            <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-1.5">
+            <label className="block text-sm font-medium text-[#b8cef0] mb-1.5">
               Categoria
             </label>
             <div className="grid grid-cols-4 gap-2">
@@ -124,7 +140,7 @@ export default function DebtForm({ onClose }) {
                   className={`py-2.5 px-2 rounded-xl text-xs font-semibold transition-all duration-200 border-2 ${
                     form.category === cat.id
                       ? `${cat.color} text-white border-transparent scale-105`
-                      : 'bg-neutral-50 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400'
+                      : 'bg-[#152a55] border-[#1a3366] text-[#b8cef0]'
                   }`}
                 >
                   {cat.label}
@@ -135,7 +151,7 @@ export default function DebtForm({ onClose }) {
 
           {/* Recorrência */}
           <div>
-            <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-1.5">
+            <label className="block text-sm font-medium text-[#b8cef0] mb-1.5">
               Recorrência
             </label>
             <div className="grid grid-cols-3 gap-2">
@@ -146,8 +162,8 @@ export default function DebtForm({ onClose }) {
                   onClick={() => handleChange('recurrence', opt.id)}
                   className={`py-2.5 px-3 rounded-xl text-sm font-medium transition-all duration-200 border-2 ${
                     form.recurrence === opt.id
-                      ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 border-transparent'
-                      : 'bg-neutral-50 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400'
+                      ? 'bg-red-600 text-white border-transparent'
+                      : 'bg-[#152a55] border-[#1a3366] text-[#b8cef0]'
                   }`}
                 >
                   {opt.label}
@@ -156,10 +172,10 @@ export default function DebtForm({ onClose }) {
             </div>
           </div>
 
-          {/* Parcelas (condicional) */}
+          {/* Parcelas */}
           {form.recurrence === 'parcelada' && (
             <div className="animate-fade-in">
-              <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-1.5">
+              <label className="block text-sm font-medium text-[#b8cef0] mb-1.5">
                 Número de Parcelas
               </label>
               <input
@@ -169,9 +185,9 @@ export default function DebtForm({ onClose }) {
                 max="120"
                 value={form.installments}
                 onChange={(e) => handleChange('installments', e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all text-base font-mono"
+                className="w-full px-4 py-3 rounded-xl bg-[#152a55] border border-[#1a3366] focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all text-base font-mono text-white"
               />
-              <p className="text-xs text-neutral-500 mt-1.5">
+              <p className="text-xs text-[#6b93d6] mt-1.5">
                 Valor por parcela: R$ {form.amount ? (parseFloat(form.amount) / parseInt(form.installments || 1)).toFixed(2) : '0,00'}
               </p>
             </div>
@@ -181,10 +197,10 @@ export default function DebtForm({ onClose }) {
           <button
             type="submit"
             disabled={saving || !form.name.trim() || !form.amount}
-            className="w-full py-3.5 bg-red-600 hover:bg-red-700 disabled:bg-neutral-300 dark:disabled:bg-neutral-700 text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98]"
+            className="w-full py-3.5 bg-red-600 hover:bg-red-700 disabled:bg-[#152a55] disabled:text-[#6b93d6] text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98]"
           >
-            <Plus size={20} />
-            {saving ? 'Salvando...' : 'Adicionar Dívida'}
+            {isEditing ? <Save size={20} /> : <Plus size={20} />}
+            {saving ? 'Salvando...' : isEditing ? 'Salvar alterações' : 'Adicionar Dívida'}
           </button>
         </form>
       </div>

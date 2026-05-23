@@ -11,11 +11,9 @@ export default function UrgentDebtBanner({ debt, onMarkPaid }) {
 
   return (
     <div className={`relative overflow-hidden rounded-2xl p-5 mb-4 ${
-      isOverdue 
-        ? 'bg-red-600 text-white' 
-        : isToday 
-          ? 'bg-red-600 text-white'
-          : 'bg-neutral-900 dark:bg-neutral-800 text-white'
+      isOverdue || isToday
+        ? 'bg-red-600 text-white'
+        : 'bg-[#152a55] text-white border border-[#1a3366]'
     }`}>
       {/* Círculo decorativo */}
       <div className={`absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-10 ${
