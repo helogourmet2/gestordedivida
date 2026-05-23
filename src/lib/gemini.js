@@ -5,12 +5,12 @@ import { firebaseConfig } from './firebase';
 // Reutiliza a instância do Firebase se já existir
 const app = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig);
 
-// Inicializa o Firebase AI Logic com Gemini Developer API
+// Força o Gemini Developer API (gratuito, sem cartão)
 const ai = getAI(app, { backend: new GoogleAIBackend() });
 
-// Gemini 2.5 Flash — mais recente, gratuito, rápido
+// Gemini 2.5 Flash
 export const geminiModel = getGenerativeModel(ai, {
-  model: 'gemini-2.5-flash-preview-05-20',
+  model: 'gemini-2.5-flash',
 });
 
 // ─── Prompt do sistema ────────────────────────────────────────────────────────

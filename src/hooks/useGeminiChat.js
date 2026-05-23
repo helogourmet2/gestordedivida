@@ -29,7 +29,10 @@ export function useGeminiChat() {
 
     // Inicia sessão de chat com contexto financeiro
     chatRef.current = geminiModel.startChat({
-      systemInstruction: systemPrompt,
+      systemInstruction: {
+        role: 'system',
+        parts: [{ text: systemPrompt }],
+      },
       history: [],
     });
   }, []);
@@ -52,12 +55,14 @@ export function useGeminiChat() {
 
       setMessages(prev => [...prev, { role: 'assistant', text: response }]);
     } catch (err) {
-      console.error('[Gemini] Erro:', err);
+      console.error('[Gemini] Erro completo:', err);
+      console.error('[Gemini] Mensagem:', err.message);
+      console.error('[Gemini] Stack:', err.stack);
       setMessages(prev => [
         ...prev,
         {
           role: 'assistant',
-          text: 'Desculpe, ocorreu um erro ao processar sua mensagem. Verifique se o Firebase AI Logic está ativado no console.',
+          text: `Erro: ${err.message || String(err)}`,
         },
       ]);
     } finally {
