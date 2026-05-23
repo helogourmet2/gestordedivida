@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard';
 import Calendario from './pages/Calendario';
 import Dividas from './pages/Dividas';
 import Financas from './pages/Financas';
+import Assistente from './pages/Assistente';
 import Config from './pages/Config';
 
 const router = createBrowserRouter([
@@ -15,6 +16,7 @@ const router = createBrowserRouter([
       { path: 'calendario', element: <Calendario /> },
       { path: 'dividas', element: <Dividas /> },
       { path: 'financas', element: <Financas /> },
+      { path: 'assistente', element: <Assistente /> },
       { path: 'config', element: <Config /> },
     ],
   },

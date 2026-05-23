@@ -1,12 +1,13 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Calendar, List, Settings, ArrowLeftRight } from 'lucide-react';
+import { LayoutDashboard, Calendar, List, Settings, ArrowLeftRight, Sparkles } from 'lucide-react';
 
 const navItems = [
-  { to: '/',          icon: LayoutDashboard,  label: 'Início' },
-  { to: '/calendario',icon: Calendar,          label: 'Calendário' },
-  { to: '/dividas',   icon: List,              label: 'Dívidas' },
-  { to: '/financas',  icon: ArrowLeftRight,    label: 'Finanças' },
-  { to: '/config',    icon: Settings,          label: 'Config' },
+  { to: '/',           icon: LayoutDashboard, label: 'Início' },
+  { to: '/calendario', icon: Calendar,         label: 'Calendário' },
+  { to: '/dividas',    icon: List,             label: 'Dívidas' },
+  { to: '/financas',   icon: ArrowLeftRight,   label: 'Finanças' },
+  { to: '/assistente', icon: Sparkles,         label: 'IA' },
+  { to: '/config',     icon: Settings,         label: 'Config' },
 ];
 
 export default function BottomNav() {
