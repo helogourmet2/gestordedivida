@@ -4,10 +4,14 @@ export default function FAB({ onClick }) {
   return (
     <button
       onClick={onClick}
-      className="fixed bottom-20 right-4 z-50 w-14 h-14 bg-red-600 hover:bg-red-700 active:scale-95 text-white rounded-full shadow-lg shadow-red-600/30 flex items-center justify-center transition-all duration-200"
+      className="fixed bottom-24 right-4 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-2xl transition-all duration-200 active:scale-90"
+      style={{
+        background: 'var(--red)',
+        boxShadow: '0 4px 24px rgba(229,0,0,0.45)',
+      }}
       aria-label="Adicionar dívida"
     >
-      <Plus size={28} strokeWidth={2.5} />
+      <Plus size={28} strokeWidth={2.5} color="#fff" />
     </button>
   );
 }

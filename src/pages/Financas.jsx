@@ -71,66 +71,63 @@ export default function Financas() {
       {/* Cards de resumo */}
       <div className="grid grid-cols-2 gap-3">
         {/* Receitas */}
-        <div className="bg-green-50 dark:bg-green-950/30 rounded-2xl p-4 border-2 border-green-300 dark:border-green-900">
+        <div className="rounded-2xl p-4" style={{ background: 'var(--green-dim)', border: '1px solid rgba(0,200,83,0.25)' }}>
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-7 h-7 rounded-lg bg-green-200 dark:bg-green-900 flex items-center justify-center">
-              <TrendingUp size={14} className="text-green-700 dark:text-green-400" />
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(0,200,83,0.2)' }}>
+              <TrendingUp size={14} style={{ color: 'var(--green)' }} />
             </div>
-            <span className="text-xs font-bold text-green-800 dark:text-green-400 uppercase tracking-wider">Receitas</span>
+            <span className="text-xs font-black uppercase tracking-wider" style={{ color: 'var(--green)' }}>Receitas</span>
           </div>
-          <p className="text-xl font-extrabold font-mono text-green-700 dark:text-green-400">
+          <p className="text-xl font-black font-mono" style={{ color: 'var(--green)' }}>
             {formatCurrency(summary.totalReceitas)}
           </p>
           {summary.totalAReceber > 0 && (
-            <p className="text-xs font-semibold text-green-600 dark:text-green-500 mt-0.5">
+            <p className="text-xs font-semibold mt-0.5" style={{ color: '#00a844' }}>
               + {formatCurrency(summary.totalAReceber)} a receber
             </p>
           )}
         </div>
 
         {/* Despesas */}
-        <div className="bg-red-50 dark:bg-red-950/30 rounded-2xl p-4 border-2 border-red-300 dark:border-red-900">
+        <div className="rounded-2xl p-4" style={{ background: 'var(--red-dim)', border: '1px solid rgba(229,0,0,0.25)' }}>
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-7 h-7 rounded-lg bg-red-200 dark:bg-red-900 flex items-center justify-center">
-              <TrendingDown size={14} className="text-red-700 dark:text-red-400" />
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(229,0,0,0.15)' }}>
+              <TrendingDown size={14} style={{ color: 'var(--red)' }} />
             </div>
-            <span className="text-xs font-bold text-red-800 dark:text-red-400 uppercase tracking-wider">Despesas</span>
+            <span className="text-xs font-black uppercase tracking-wider" style={{ color: 'var(--red)' }}>Despesas</span>
           </div>
-          <p className="text-xl font-extrabold font-mono text-red-700 dark:text-red-400">
+          <p className="text-xl font-black font-mono" style={{ color: 'var(--red)' }}>
             {formatCurrency(summary.totalDespesas)}
           </p>
           {summary.totalPendente > 0 && (
-            <p className="text-xs font-semibold text-orange-600 dark:text-orange-400 mt-0.5">
+            <p className="text-xs font-semibold mt-0.5" style={{ color: '#ff8800' }}>
               + {formatCurrency(summary.totalPendente)} pendente
             </p>
           )}
         </div>
 
         {/* Saldo */}
-        <div className={`col-span-2 rounded-2xl p-4 border-2 ${
-          summary.saldo >= 0
-            ? 'bg-green-50 dark:bg-green-950/20 border-green-300 dark:border-green-900'
-            : 'bg-red-50 dark:bg-red-950/20 border-red-300 dark:border-red-900'
-        }`}>
+        <div className="col-span-2 rounded-2xl p-4" style={{
+          background: summary.saldo >= 0 ? 'var(--green-dim)' : 'var(--red-dim)',
+          border: `1px solid ${summary.saldo >= 0 ? 'rgba(0,200,83,0.25)' : 'rgba(229,0,0,0.25)'}`,
+        }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center">
-                <Wallet size={14} className="text-neutral-600 dark:text-neutral-400" />
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'var(--card-2)' }}>
+                <Wallet size={14} style={{ color: 'var(--gray-2)' }} />
               </div>
-              <span className="text-xs font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">Saldo do mês</span>
+              <span className="text-xs font-black uppercase tracking-wider" style={{ color: 'var(--gray-2)' }}>Saldo do mês</span>
             </div>
             {summary.totalPendente > 0 && (
-              <div className="flex items-center gap-1 text-xs text-orange-600 dark:text-orange-400 font-bold">
+              <div className="flex items-center gap-1 text-xs font-bold" style={{ color: '#ff8800' }}>
                 <Clock size={11} />
                 {formatCurrency(summary.totalPendente)} pendente
               </div>
             )}
           </div>
-          <p className={`text-2xl font-extrabold font-mono mt-2 ${
-            summary.saldo >= 0
-              ? 'text-green-700 dark:text-green-400'
-              : 'text-red-600 dark:text-red-400'
-          }`}>
+          <p className="text-2xl font-black font-mono mt-2" style={{
+            color: summary.saldo >= 0 ? 'var(--green)' : 'var(--red)'
+          }}>
             {summary.saldo >= 0 ? '+' : ''}{formatCurrency(summary.saldo)}
           </p>
         </div>
@@ -138,22 +135,19 @@ export default function Financas() {
 
       {/* Botões de ação rápida */}
       <div className="grid grid-cols-3 gap-2">
-        <button
-          onClick={() => openAdd('receita')}
-          className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white text-sm font-semibold transition-all active:scale-95"
-        >
+        <button onClick={() => openAdd('receita')}
+          className="flex items-center justify-center gap-1.5 py-3 rounded-xl text-sm font-black transition-all active:scale-95"
+          style={{ background: 'var(--green)', color: '#fff' }}>
           <Plus size={16} /> Receita
         </button>
-        <button
-          onClick={() => openAdd('despesa')}
-          className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-all active:scale-95"
-        >
+        <button onClick={() => openAdd('despesa')}
+          className="flex items-center justify-center gap-1.5 py-3 rounded-xl text-sm font-black transition-all active:scale-95"
+          style={{ background: 'var(--red)', color: '#fff' }}>
           <Plus size={16} /> Despesa
         </button>
-        <button
-          onClick={() => setShowCats(v => !v)}
-          className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 text-sm font-semibold transition-all active:scale-95"
-        >
+        <button onClick={() => setShowCats(v => !v)}
+          className="flex items-center justify-center gap-1.5 py-3 rounded-xl text-sm font-black transition-all active:scale-95"
+          style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--gray-1)' }}>
           <Settings2 size={16} /> Categorias
         </button>
       </div>
@@ -209,15 +203,12 @@ export default function Financas() {
       {/* Filtros */}
       <div className="flex gap-2 overflow-x-auto pb-1">
         {FILTERS.map(f => (
-          <button
-            key={f.id}
-            onClick={() => setFilter(f.id)}
-            className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
-              filter === f.id
-                ? 'bg-red-600 text-white'
-                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700'
-            }`}
-          >
+          <button key={f.id} onClick={() => setFilter(f.id)}
+            className="flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-bold transition-all duration-200"
+            style={filter === f.id
+              ? { background: 'var(--red)', color: '#fff' }
+              : { background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--gray-2)' }
+            }>
             {f.label}
           </button>
         ))}

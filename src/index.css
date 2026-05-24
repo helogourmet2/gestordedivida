@@ -1,83 +1,57 @@
 @import "tailwindcss";
 
-/* ─── Tema Flamengo: Azul Marinho + Vermelho + Branco ──────────────────────── */
-@theme {
-  --color-navy-950: #050d1a;
-  --color-navy-900: #0a1628;
-  --color-navy-800: #0f2040;
-  --color-navy-700: #152a55;
-  --color-navy-600: #1a3366;
-  --color-navy-500: #1e3d7a;
-  --color-navy-400: #2a52a0;
-  --color-navy-300: #3d6bbf;
-  --color-navy-200: #6b93d6;
-  --color-navy-100: #b8cef0;
-  --color-navy-50:  #e8f0fb;
+/* ─── Design Tokens: Preto · Vermelho · Branco ─────────────────────────────── */
+:root {
+  --red:        #e50000;
+  --red-dark:   #b30000;
+  --red-dim:    rgba(229,0,0,0.12);
+  --black:      #000000;
+  --card:       #111111;
+  --card-2:     #1a1a1a;
+  --border:     #2a2a2a;
+  --white:      #ffffff;
+  --gray-1:     #f0f0f0;
+  --gray-2:     #a0a0a0;
+  --gray-3:     #555555;
+  --green:      #00c853;
+  --green-dim:  rgba(0,200,83,0.12);
 }
 
 @layer base {
-  * {
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  html {
-    scroll-behavior: smooth;
-    /* Dark mode azul marinho por padrão */
-    color-scheme: dark;
-  }
-
+  * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+  html { scroll-behavior: smooth; color-scheme: dark; }
   body {
-    margin: 0;
-    padding: 0;
+    margin: 0; padding: 0;
     overscroll-behavior: none;
-    background-color: #0a1628;
-    color: #ffffff;
+    background: var(--black);
+    color: var(--white);
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
-
-  #root {
-    width: 100%;
-    min-height: 100svh;
-  }
+  #root { width: 100%; min-height: 100svh; }
 }
 
 @layer utilities {
-  /* Tema claro (dia) */
-  .theme-light {
-    --bg-primary:    #ffffff;
-    --bg-secondary:  #f4f6fb;
-    --bg-card:       #ffffff;
-    --bg-nav:        rgba(255,255,255,0.92);
-    --border-color:  #e2e8f0;
-    --text-primary:  #0a1628;
-    --text-secondary:#4a5568;
-  }
-
-  /* Tema escuro azul marinho (noite / padrão) */
-  .theme-dark {
-    --bg-primary:    #0a1628;
-    --bg-secondary:  #0f2040;
-    --bg-card:       #0f2040;
-    --bg-nav:        rgba(10,22,40,0.95);
-    --border-color:  #1a3366;
-    --text-primary:  #ffffff;
-    --text-secondary:#b8cef0;
-  }
-
   .animate-slide-up {
-    animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    animation: slideUp 0.28s cubic-bezier(0.32,0.72,0,1);
   }
-
   .animate-fade-in {
-    animation: fadeIn 0.2s ease-out;
+    animation: fadeIn 0.18s ease-out;
   }
-
   @keyframes slideUp {
     from { transform: translateY(100%); opacity: 0; }
     to   { transform: translateY(0);    opacity: 1; }
   }
-
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(4px); }
-    to   { opacity: 1; transform: translateY(0);   }
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20%     { transform: translateX(-8px); }
+    40%     { transform: translateX(8px); }
+    60%     { transform: translateX(-8px); }
+    80%     { transform: translateX(8px); }
+  }
+  .animate-shake { animation: shake 0.5s ease-in-out; }
 }

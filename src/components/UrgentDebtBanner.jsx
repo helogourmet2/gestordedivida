@@ -1,6 +1,5 @@
 import { AlertTriangle, Clock, CheckCircle2 } from 'lucide-react';
 import { formatCurrency, daysUntilDue, daysUntilDueText } from '../utils/formatters';
-import CategoryBadge from './CategoryBadge';
 
 export default function UrgentDebtBanner({ debt, onMarkPaid }) {
   if (!debt) return null;
@@ -8,49 +7,56 @@ export default function UrgentDebtBanner({ debt, onMarkPaid }) {
   const days = daysUntilDue(debt.dueDate);
   const isOverdue = days < 0;
   const isToday = days === 0;
+  const urgent = isOverdue || isToday;
 
   return (
-    <div className={`relative overflow-hidden rounded-2xl p-5 mb-4 ${
-      isOverdue || isToday
-        ? 'bg-red-600 text-white'
-        : 'bg-[#152a55] text-white border border-[#1a3366]'
-    }`}>
+    <div
+      className="relative overflow-hidden rounded-2xl p-5 mb-4"
+      style={{
+        background: urgent ? 'var(--red)' : 'var(--card)',
+        border: urgent ? 'none' : '1px solid var(--border)',
+      }}
+    >
       {/* Círculo decorativo */}
-      <div className={`absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-10 ${
-        isOverdue || isToday ? 'bg-white' : 'bg-red-500'
-      }`} />
-      
+      <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full opacity-10"
+        style={{ background: urgent ? '#fff' : 'var(--red)' }} />
+
       <div className="relative z-10">
         <div className="flex items-center gap-2 mb-3">
-          {isOverdue || isToday ? (
-            <AlertTriangle size={16} className="animate-pulse" />
-          ) : (
-            <Clock size={16} />
-          )}
-          <span className="text-xs font-semibold uppercase tracking-wider opacity-80">
+          {urgent
+            ? <AlertTriangle size={15} className="animate-pulse" color="#fff" />
+            : <Clock size={15} style={{ color: 'var(--gray-2)' }} />
+          }
+          <span className="text-xs font-bold uppercase tracking-widest"
+            style={{ color: urgent ? 'rgba(255,255,255,0.85)' : 'var(--gray-2)' }}>
             {isOverdue ? 'Dívida Vencida' : isToday ? 'Vence Hoje!' : 'Próximo Vencimento'}
           </span>
         </div>
-        
-        <h2 className="text-lg font-bold mb-1 truncate">{debt.name}</h2>
-        
+
+        <h2 className="text-lg font-black mb-1 truncate"
+          style={{ color: urgent ? '#fff' : 'var(--white)' }}>
+          {debt.name}
+        </h2>
+
         <div className="flex items-end justify-between">
           <div>
-            <p className="text-2xl font-bold font-mono">
+            <p className="text-2xl font-black font-mono"
+              style={{ color: urgent ? '#fff' : 'var(--white)' }}>
               {formatCurrency(debt.amount)}
             </p>
-            <p className="text-xs mt-1 opacity-75">
+            <p className="text-xs mt-1"
+              style={{ color: urgent ? 'rgba(255,255,255,0.75)' : 'var(--gray-2)' }}>
               {daysUntilDueText(debt.dueDate)}
             </p>
           </div>
-          
+
           <button
             onClick={() => onMarkPaid(debt.id)}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 active:scale-95 ${
-              isOverdue || isToday
-                ? 'bg-white text-red-600 hover:bg-neutral-100'
-                : 'bg-red-600 text-white hover:bg-red-700'
-            }`}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95"
+            style={urgent
+              ? { background: '#fff', color: 'var(--red)' }
+              : { background: 'var(--red)', color: '#fff' }
+            }
           >
             <CheckCircle2 size={16} />
             Pagar

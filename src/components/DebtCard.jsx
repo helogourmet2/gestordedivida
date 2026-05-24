@@ -11,77 +11,67 @@ export default function DebtCard({ debt, onMarkPaid, onMarkUnpaid, onDelete, com
   const isToday = days === 0 && !debt.isPaid;
   const isSoon = days > 0 && days <= 3 && !debt.isPaid;
 
+  const cardStyle = debt.isPaid
+    ? { background: 'var(--card)', border: '1px solid var(--border)', opacity: 0.6 }
+    : isOverdue
+      ? { background: 'rgba(229,0,0,0.08)', border: '1px solid rgba(229,0,0,0.35)' }
+      : { background: 'var(--card)', border: '1px solid var(--border)' };
+
   return (
     <>
-      <div className={`group rounded-2xl p-4 border transition-all duration-200 ${
-        debt.isPaid
-          ? 'bg-[#0f2040]/60 border-[#1a3366]/50 opacity-70'
-          : isOverdue
-            ? 'bg-red-950/40 border-red-800/60'
-            : 'bg-[#0f2040] border-[#1a3366] hover:border-[#2a52a0]'
-      }`}>
+      <div className="group rounded-2xl p-4 transition-all duration-200" style={cardStyle}>
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className={`font-semibold truncate ${
-                compact ? 'text-sm' : 'text-base'
-              } ${debt.isPaid ? 'line-through text-[#6b93d6]' : 'text-white'}`}>
+
+            {/* Nome + categoria */}
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <h3 className={`font-bold truncate ${compact ? 'text-sm' : 'text-base'} ${
+                debt.isPaid ? 'line-through' : ''
+              }`} style={{ color: debt.isPaid ? 'var(--gray-3)' : 'var(--white)' }}>
                 {debt.name}
               </h3>
-              <CategoryBadge categoryId={debt.category} />
+              <CategoryBadge categoryId={debt.categoryId} />
             </div>
 
-            <div className="flex items-center gap-3 mt-1">
-              <span className={`font-mono font-bold ${
-                compact ? 'text-base' : 'text-lg'
-              } ${
-                debt.isPaid
-                  ? 'text-[#6b93d6]'
-                  : isOverdue
-                    ? 'text-red-400'
-                    : 'text-white'
-              }`}>
-                {formatCurrency(debt.amount)}
-              </span>
-            </div>
+            {/* Valor */}
+            <p className={`font-mono font-extrabold ${compact ? 'text-base' : 'text-xl'}`}
+              style={{ color: debt.isPaid ? 'var(--gray-3)' : isOverdue ? 'var(--red)' : 'var(--white)' }}>
+              {formatCurrency(debt.amount)}
+            </p>
 
-            <div className="flex items-center gap-2 mt-1.5">
-              <span className={`text-xs ${
-                debt.isPaid
-                  ? 'text-[#6b93d6]'
-                  : isOverdue
-                    ? 'text-red-400 font-semibold'
-                    : isToday
-                      ? 'text-red-400 font-semibold'
-                      : isSoon
-                        ? 'text-orange-400 font-medium'
-                        : 'text-[#b8cef0]'
-              }`}>
+            {/* Status data */}
+            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+              <span className="text-xs font-semibold" style={{
+                color: debt.isPaid ? 'var(--gray-2)'
+                  : isOverdue || isToday ? 'var(--red)'
+                  : isSoon ? '#ff8800'
+                  : 'var(--gray-2)'
+              }}>
                 {debt.isPaid ? `Paga em ${formatDate(debt.paidAt)}` : daysUntilDueText(debt.dueDate)}
               </span>
-              <span className="text-[#1a3366]">·</span>
-              <span className="text-xs text-[#6b93d6]">
+              <span style={{ color: 'var(--border)' }}>·</span>
+              <span className="text-xs" style={{ color: 'var(--gray-2)' }}>
                 {formatDate(debt.dueDate)}
               </span>
             </div>
           </div>
 
           {/* Ações */}
-          <div className="flex items-center gap-1">
-            {/* Editar — sempre visível */}
+          <div className="flex items-center gap-1 shrink-0">
             <button
               onClick={() => setShowEdit(true)}
-              className="p-2.5 rounded-xl bg-[#152a55] text-[#6b93d6] hover:bg-[#1a3366] hover:text-[#b8cef0] transition-colors active:scale-95"
-              aria-label="Editar dívida"
+              className="p-2.5 rounded-xl transition-all active:scale-90"
+              style={{ background: 'var(--card-2)', color: 'var(--gray-2)' }}
+              aria-label="Editar"
             >
-              <Pencil size={16} />
+              <Pencil size={15} />
             </button>
 
-            {/* Pagar / Desfazer */}
             {!debt.isPaid ? (
               <button
                 onClick={() => onMarkPaid(debt.id)}
-                className="p-2.5 rounded-xl bg-red-900/40 text-red-400 hover:bg-red-900/70 transition-colors active:scale-95"
+                className="p-2.5 rounded-xl transition-all active:scale-90"
+                style={{ background: 'var(--red-dim)', color: 'var(--red)' }}
                 aria-label="Marcar como paga"
               >
                 <CheckCircle2 size={18} />
@@ -89,36 +79,29 @@ export default function DebtCard({ debt, onMarkPaid, onMarkUnpaid, onDelete, com
             ) : (
               <button
                 onClick={() => onMarkUnpaid(debt.id)}
-                className="p-2.5 rounded-xl bg-[#152a55] text-[#6b93d6] hover:bg-[#1a3366] transition-colors active:scale-95"
-                aria-label="Desfazer pagamento"
+                className="p-2.5 rounded-xl transition-all active:scale-90"
+                style={{ background: 'var(--card-2)', color: 'var(--gray-2)' }}
+                aria-label="Desfazer"
               >
                 <Undo2 size={18} />
               </button>
             )}
 
-            {/* Excluir */}
             {onDelete && (
               <button
-                onClick={() => {
-                  if (window.confirm(`Excluir "${debt.name}"?`)) onDelete(debt.id);
-                }}
-                className="p-2.5 rounded-xl text-[#6b93d6] hover:bg-red-900/40 hover:text-red-400 transition-colors active:scale-95"
-                aria-label="Excluir dívida"
+                onClick={() => { if (window.confirm(`Excluir "${debt.name}"?`)) onDelete(debt.id); }}
+                className="p-2.5 rounded-xl transition-all active:scale-90 opacity-0 group-hover:opacity-100"
+                style={{ color: 'var(--gray-3)' }}
+                aria-label="Excluir"
               >
-                <Trash2 size={18} />
+                <Trash2 size={16} />
               </button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Modal de edição */}
-      {showEdit && (
-        <DebtForm
-          debt={debt}
-          onClose={() => setShowEdit(false)}
-        />
-      )}
+      {showEdit && <DebtForm debt={debt} onClose={() => setShowEdit(false)} />}
     </>
   );
 }
