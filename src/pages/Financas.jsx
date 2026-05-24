@@ -71,63 +71,65 @@ export default function Financas() {
       {/* Cards de resumo */}
       <div className="grid grid-cols-2 gap-3">
         {/* Receitas */}
-        <div className="bg-green-50 dark:bg-green-950/30 rounded-2xl p-4 border border-green-200 dark:border-green-900">
+        <div className="bg-green-50 dark:bg-green-950/30 rounded-2xl p-4 border-2 border-green-300 dark:border-green-900">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-7 h-7 rounded-lg bg-green-100 dark:bg-green-900 flex items-center justify-center">
-              <TrendingUp size={14} className="text-green-600 dark:text-green-400" />
+            <div className="w-7 h-7 rounded-lg bg-green-200 dark:bg-green-900 flex items-center justify-center">
+              <TrendingUp size={14} className="text-green-700 dark:text-green-400" />
             </div>
-            <span className="text-[10px] font-semibold text-green-700 dark:text-green-400 uppercase tracking-wider">Receitas</span>
+            <span className="text-xs font-bold text-green-800 dark:text-green-400 uppercase tracking-wider">Receitas</span>
           </div>
-          <p className="text-lg font-bold font-mono text-green-700 dark:text-green-400">
+          <p className="text-xl font-extrabold font-mono text-green-700 dark:text-green-400">
             {formatCurrency(summary.totalReceitas)}
           </p>
           {summary.totalAReceber > 0 && (
-            <p className="text-[10px] text-green-600 dark:text-green-500 mt-0.5">
+            <p className="text-xs font-semibold text-green-600 dark:text-green-500 mt-0.5">
               + {formatCurrency(summary.totalAReceber)} a receber
             </p>
           )}
         </div>
 
         {/* Despesas */}
-        <div className="bg-red-50 dark:bg-red-950/30 rounded-2xl p-4 border border-red-200 dark:border-red-900">
+        <div className="bg-red-50 dark:bg-red-950/30 rounded-2xl p-4 border-2 border-red-300 dark:border-red-900">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-7 h-7 rounded-lg bg-red-100 dark:bg-red-900 flex items-center justify-center">
-              <TrendingDown size={14} className="text-red-600 dark:text-red-400" />
+            <div className="w-7 h-7 rounded-lg bg-red-200 dark:bg-red-900 flex items-center justify-center">
+              <TrendingDown size={14} className="text-red-700 dark:text-red-400" />
             </div>
-            <span className="text-[10px] font-semibold text-red-700 dark:text-red-400 uppercase tracking-wider">Despesas</span>
+            <span className="text-xs font-bold text-red-800 dark:text-red-400 uppercase tracking-wider">Despesas</span>
           </div>
-          <p className="text-lg font-bold font-mono text-red-700 dark:text-red-400">
+          <p className="text-xl font-extrabold font-mono text-red-700 dark:text-red-400">
             {formatCurrency(summary.totalDespesas)}
           </p>
           {summary.totalPendente > 0 && (
-            <p className="text-[10px] text-orange-600 dark:text-orange-400 mt-0.5">
+            <p className="text-xs font-semibold text-orange-600 dark:text-orange-400 mt-0.5">
               + {formatCurrency(summary.totalPendente)} pendente
             </p>
           )}
         </div>
 
         {/* Saldo */}
-        <div className={`col-span-2 rounded-2xl p-4 border ${
+        <div className={`col-span-2 rounded-2xl p-4 border-2 ${
           summary.saldo >= 0
-            ? 'bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800'
-            : 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900'
+            ? 'bg-green-50 dark:bg-green-950/20 border-green-300 dark:border-green-900'
+            : 'bg-red-50 dark:bg-red-950/20 border-red-300 dark:border-red-900'
         }`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center">
                 <Wallet size={14} className="text-neutral-600 dark:text-neutral-400" />
               </div>
-              <span className="text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Saldo do mês</span>
+              <span className="text-xs font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">Saldo do mês</span>
             </div>
             {summary.totalPendente > 0 && (
-              <div className="flex items-center gap-1 text-[10px] text-orange-500 font-medium">
-                <Clock size={10} />
+              <div className="flex items-center gap-1 text-xs text-orange-600 dark:text-orange-400 font-bold">
+                <Clock size={11} />
                 {formatCurrency(summary.totalPendente)} pendente
               </div>
             )}
           </div>
-          <p className={`text-2xl font-bold font-mono mt-2 ${
-            summary.saldo >= 0 ? 'text-neutral-900 dark:text-neutral-100' : 'text-red-600 dark:text-red-400'
+          <p className={`text-2xl font-extrabold font-mono mt-2 ${
+            summary.saldo >= 0
+              ? 'text-green-700 dark:text-green-400'
+              : 'text-red-600 dark:text-red-400'
           }`}>
             {summary.saldo >= 0 ? '+' : ''}{formatCurrency(summary.saldo)}
           </p>
