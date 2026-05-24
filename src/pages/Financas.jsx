@@ -71,36 +71,38 @@ export default function Financas() {
       {/* Cards de resumo */}
       <div className="grid grid-cols-2 gap-3">
         {/* Receitas */}
-        <div className="rounded-2xl p-4" style={{ background: 'var(--green-dim)', border: '1px solid rgba(0,200,83,0.25)' }}>
+        <div className="rounded-2xl p-4" style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}>
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(0,200,83,0.2)' }}>
-              <TrendingUp size={14} style={{ color: 'var(--green)' }} />
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+              style={{ background: 'rgba(229,0,0,0.15)' }}>
+              <TrendingUp size={14} style={{ color: '#e50000' }} />
             </div>
-            <span className="text-xs font-black uppercase tracking-wider" style={{ color: 'var(--green)' }}>Receitas</span>
+            <span className="text-xs font-black uppercase tracking-wider" style={{ color: '#e50000' }}>Receitas</span>
           </div>
-          <p className="text-xl font-black font-mono" style={{ color: 'var(--green)' }}>
+          <p className="text-xl font-black font-mono" style={{ color: '#ffffff' }}>
             {formatCurrency(summary.totalReceitas)}
           </p>
           {summary.totalAReceber > 0 && (
-            <p className="text-xs font-semibold mt-0.5" style={{ color: '#00a844' }}>
+            <p className="text-xs font-semibold mt-0.5" style={{ color: '#a0a0a0' }}>
               + {formatCurrency(summary.totalAReceber)} a receber
             </p>
           )}
         </div>
 
         {/* Despesas */}
-        <div className="rounded-2xl p-4" style={{ background: 'var(--red-dim)', border: '1px solid rgba(229,0,0,0.25)' }}>
+        <div className="rounded-2xl p-4" style={{ background: '#e50000' }}>
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(229,0,0,0.15)' }}>
-              <TrendingDown size={14} style={{ color: 'var(--red)' }} />
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+              style={{ background: 'rgba(255,255,255,0.2)' }}>
+              <TrendingDown size={14} style={{ color: '#fff' }} />
             </div>
-            <span className="text-xs font-black uppercase tracking-wider" style={{ color: 'var(--red)' }}>Despesas</span>
+            <span className="text-xs font-black uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.85)' }}>Despesas</span>
           </div>
-          <p className="text-xl font-black font-mono" style={{ color: 'var(--red)' }}>
+          <p className="text-xl font-black font-mono" style={{ color: '#ffffff' }}>
             {formatCurrency(summary.totalDespesas)}
           </p>
           {summary.totalPendente > 0 && (
-            <p className="text-xs font-semibold mt-0.5" style={{ color: '#ff8800' }}>
+            <p className="text-xs font-semibold mt-0.5" style={{ color: 'rgba(255,255,255,0.75)' }}>
               + {formatCurrency(summary.totalPendente)} pendente
             </p>
           )}
@@ -108,15 +110,15 @@ export default function Financas() {
 
         {/* Saldo */}
         <div className="col-span-2 rounded-2xl p-4" style={{
-          background: summary.saldo >= 0 ? 'var(--green-dim)' : 'var(--red-dim)',
-          border: `1px solid ${summary.saldo >= 0 ? 'rgba(0,200,83,0.25)' : 'rgba(229,0,0,0.25)'}`,
+          background: '#1a1a1a',
+          border: `1px solid ${summary.saldo >= 0 ? '#2a2a2a' : 'rgba(229,0,0,0.4)'}`,
         }}>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'var(--card-2)' }}>
-                <Wallet size={14} style={{ color: 'var(--gray-2)' }} />
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#2a2a2a' }}>
+                <Wallet size={14} style={{ color: '#a0a0a0' }} />
               </div>
-              <span className="text-xs font-black uppercase tracking-wider" style={{ color: 'var(--gray-2)' }}>Saldo do mês</span>
+              <span className="text-xs font-black uppercase tracking-wider" style={{ color: '#e50000' }}>Saldo do mês</span>
             </div>
             {summary.totalPendente > 0 && (
               <div className="flex items-center gap-1 text-xs font-bold" style={{ color: '#ff8800' }}>
@@ -125,8 +127,8 @@ export default function Financas() {
               </div>
             )}
           </div>
-          <p className="text-2xl font-black font-mono mt-2" style={{
-            color: summary.saldo >= 0 ? 'var(--green)' : 'var(--red)'
+          <p className="text-2xl font-black font-mono" style={{
+            color: summary.saldo >= 0 ? '#ffffff' : '#e50000'
           }}>
             {summary.saldo >= 0 ? '+' : ''}{formatCurrency(summary.saldo)}
           </p>
