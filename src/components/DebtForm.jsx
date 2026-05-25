@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Plus, Save, Settings2, Pencil, Trash2 } from 'lucide-react';
+import { X, Plus, Save, Settings2, Pencil, Trash2, CheckCircle2 } from 'lucide-react';
 import { RECURRENCE_OPTIONS } from '../utils/constants';
 import { addDebt, updateDebt } from '../db/database';
 import { toDateInputValue, localDateToISO } from '../utils/formatters';
@@ -26,6 +26,8 @@ export default function DebtForm({ onClose, debt = null }) {
     installments: debt?.installments || 2,
   });
   const [saving, setSaving] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [errors, setErrors] = useState({});
   const [showCatManager, setShowCatManager] = useState(false);
   const [showCatForm, setShowCatForm] = useState(false);
   const [editingCat, setEditingCat] = useState(null);
@@ -34,9 +36,18 @@ export default function DebtForm({ onClose, debt = null }) {
 
   const handleChange = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
 
+  const validate = () => {
+    const errs = {};
+    if (!form.name.trim()) errs.name = 'Informe a descrição da dívida';
+    if (!form.amount || parseFloat(form.amount) <= 0) errs.amount = 'Informe um valor maior que zero';
+    if (!form.dueDate) errs.dueDate = 'Informe a data de vencimento';
+    return errs;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.amount || !form.dueDate) return;
+    const errs = validate();
+    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
     setSaving(true);
     try {
       const catId = parseInt(effectiveCategoryId);
@@ -59,30 +70,46 @@ export default function DebtForm({ onClose, debt = null }) {
           installments: form.recurrence === 'parcelada' ? parseInt(form.installments) : null,
         });
       }
-      onClose();
+      setSuccess(true);
+      setTimeout(() => onClose(), 800);
     } catch (error) {
       console.error('Erro ao salvar dívida:', error);
+      setErrors({ submit: 'Erro ao salvar. Tente novamente.' });
     } finally {
       setSaving(false);
     }
   };
 
-  const labelStyle = { color: 'var(--gray-2)', fontSize: '0.8rem', fontWeight: 600, marginBottom: '6px', display: 'block' };
+  const labelStyle = { color: '#a0a0a0', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' };
 
   return (
     <>
       <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
         <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
         <div className="relative w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-6 animate-slide-up max-h-[90vh] overflow-y-auto"
-          style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+          style={{ background: '#111111', border: '1px solid #2a2a2a' }}>
+
+          {/* ── Feedback de sucesso ── */}
+          {success && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-t-3xl sm:rounded-3xl"
+              style={{ background: '#111111' }}>
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+                style={{ background: 'rgba(229,0,0,0.15)' }}>
+                <CheckCircle2 size={36} style={{ color: '#e50000' }} />
+              </div>
+              <p className="text-lg font-black" style={{ color: '#fff' }}>
+                {isEditing ? 'Dívida atualizada!' : 'Dívida adicionada!'}
+              </p>
+            </div>
+          )}
 
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-black" style={{ color: 'var(--white)' }}>
+            <h2 className="text-xl font-black" style={{ color: '#fff' }}>
               {isEditing ? 'Editar Dívida' : 'Nova Dívida'}
             </h2>
             <button onClick={onClose} className="p-2 rounded-xl"
-              style={{ background: 'var(--card-2)', color: 'var(--gray-2)' }}>
+              style={{ background: '#1a1a1a', color: '#a0a0a0' }}>
               <X size={20} />
             </button>
           </div>
@@ -93,29 +120,33 @@ export default function DebtForm({ onClose, debt = null }) {
             <div>
               <label style={labelStyle}>Descrição</label>
               <input type="text" value={form.name}
-                onChange={e => handleChange('name', e.target.value)}
+                onChange={e => { handleChange('name', e.target.value); if (errors.name) setErrors(p => ({...p, name: ''})); }}
                 placeholder="Ex: Cartão de Crédito, Aluguel..."
                 className="w-full px-4 py-3 rounded-xl text-base transition-all"
-                style={inputStyle} autoFocus required />
+                style={{ ...inputStyle, borderColor: errors.name ? '#e50000' : '#2a2a2a' }}
+                autoFocus />
+              {errors.name && <p className="text-xs mt-1 font-semibold" style={{ color: '#e50000' }}>{errors.name}</p>}
             </div>
 
             {/* Valor */}
             <div>
               <label style={labelStyle}>Valor (R$)</label>
               <input type="number" inputMode="decimal" step="0.01" min="0.01"
-                value={form.amount} onChange={e => handleChange('amount', e.target.value)}
+                value={form.amount} onChange={e => { handleChange('amount', e.target.value); if (errors.amount) setErrors(p => ({...p, amount: ''})); }}
                 placeholder="0,00"
                 className="w-full px-4 py-3 rounded-xl text-base font-mono transition-all"
-                style={inputStyle} required />
+                style={{ ...inputStyle, fontFamily: 'monospace', borderColor: errors.amount ? '#e50000' : '#2a2a2a' }} />
+              {errors.amount && <p className="text-xs mt-1 font-semibold" style={{ color: '#e50000' }}>{errors.amount}</p>}
             </div>
 
             {/* Data */}
             <div>
               <label style={labelStyle}>Data de Vencimento</label>
               <input type="date" value={form.dueDate}
-                onChange={e => handleChange('dueDate', e.target.value)}
+                onChange={e => { handleChange('dueDate', e.target.value); if (errors.dueDate) setErrors(p => ({...p, dueDate: ''})); }}
                 className="w-full px-4 py-3 rounded-xl text-base transition-all"
-                style={inputStyle} required />
+                style={{ ...inputStyle, borderColor: errors.dueDate ? '#e50000' : '#2a2a2a' }} />
+              {errors.dueDate && <p className="text-xs mt-1 font-semibold" style={{ color: '#e50000' }}>{errors.dueDate}</p>}
             </div>
 
             {/* Categoria */}
@@ -227,15 +258,22 @@ export default function DebtForm({ onClose, debt = null }) {
             )}
 
             {/* Salvar */}
-            <button type="submit"
-              disabled={saving || !form.name.trim() || !form.amount}
+            {errors.submit && (
+              <p className="text-sm font-semibold text-center py-2 rounded-xl"
+                style={{ background: 'rgba(229,0,0,0.1)', color: '#e50000' }}>
+                {errors.submit}
+              </p>
+            )}
+            <button type="submit" disabled={saving}
               className="w-full py-3.5 rounded-xl font-black text-base flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
               style={{
-                background: saving || !form.name.trim() || !form.amount ? 'var(--card-2)' : 'var(--red)',
-                color: saving || !form.name.trim() || !form.amount ? 'var(--gray-3)' : '#fff',
+                background: saving ? '#2a2a2a' : '#e50000',
+                color: saving ? '#555' : '#fff',
               }}>
-              {isEditing ? <Save size={20} /> : <Plus size={20} />}
-              {saving ? 'Salvando...' : isEditing ? 'Salvar alterações' : 'Adicionar Dívida'}
+              {saving
+                ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Salvando...</>
+                : <>{isEditing ? <Save size={20} /> : <Plus size={20} />}{isEditing ? 'Salvar alterações' : 'Adicionar Dívida'}</>
+              }
             </button>
           </form>
         </div>

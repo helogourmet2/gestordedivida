@@ -469,7 +469,7 @@ export default function Config() {
           <div>
             <p className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">Gestor de Dívidas v1.0</p>
             <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-              Dados armazenados localmente no seu dispositivo. Funciona offline.
+              Dados ficam no dispositivo e sincronizam com a nuvem quando você entra na conta. Funciona offline.
             </p>
           </div>
         </div>
