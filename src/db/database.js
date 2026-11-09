@@ -220,6 +220,41 @@ db.version(5).stores({
   }
 });
 
+function categoryKey(category, typed = false) {
+  const name = String(category.name || '').trim().normalize('NFC').toLowerCase();
+  return typed ? `${category.type}|${name}` : name;
+}
+
+function categorySyncIds(category) {
+  return [...new Set([category.syncId, ...(category.syncAliases || [])].filter(Boolean))];
+}
+
+async function consolidateCategories(categoriesTable, itemsTable, typed = false) {
+  const byName = new Map();
+  for (const category of await categoriesTable.toArray()) {
+    const key = categoryKey(category, typed);
+    const existing = byName.get(key);
+    if (!existing) {
+      byName.set(key, category);
+      continue;
+    }
+    const changes = {
+      syncAliases: [...new Set([...categorySyncIds(existing), ...categorySyncIds(category)])]
+        .filter(id => id !== existing.syncId),
+      isDefault: existing.isDefault || category.isDefault,
+    };
+    await categoriesTable.update(existing.id, changes);
+    Object.assign(existing, changes);
+    await itemsTable.where('categoryId').equals(category.id).modify({ categoryId: existing.id });
+    await categoriesTable.delete(category.id);
+  }
+}
+
+db.version(6).stores({}).upgrade(async tx => {
+  await consolidateCategories(tx.table('debtCategories'), tx.table('debts'));
+  await consolidateCategories(tx.table('transactionCategories'), tx.table('transactions'), true);
+});
+
 export async function ensureDebtSyncMetadata() {
   const debts = await db.debts.toArray();
   const nowIso = new Date().toISOString();
@@ -327,12 +362,20 @@ async function getTransactionSyncPayload(transaction) {
 }
 
 export async function mergeRemoteDebtCategories(remoteCategories = []) {
+  return db.transaction('rw', db.debtCategories, db.debts, async () => {
+    await consolidateCategories(db.debtCategories, db.debts, false);
+    return mergeDebtCategories(remoteCategories);
+  });
+}
+
+async function mergeDebtCategories(remoteCategories) {
   if (!Array.isArray(remoteCategories) || remoteCategories.length === 0) {
     return { imported: 0, updated: 0, skipped: 0 };
   }
 
   const localCategories = await ensureDebtCategorySyncMetadata();
-  const bySyncId = new Map(localCategories.filter(category => category.syncId).map(category => [category.syncId, category]));
+  const bySyncId = new Map(localCategories.flatMap(category => categorySyncIds(category).map(id => [id, category])));
+  const byName = new Map(localCategories.map(category => [categoryKey(category), category]));
   let imported = 0;
   let updated = 0;
   let skipped = 0;
@@ -349,13 +392,29 @@ export async function mergeRemoteDebtCategories(remoteCategories = []) {
     };
 
     if (!localCategory) {
-      await db.debtCategories.add(payload);
+      // Verificar se já existe categoria com o mesmo nome (evitar duplicatas)
+      const existingByName = byName.get(categoryKey(payload));
+      if (existingByName) {
+        // Preservar o ID principal e reconhecer também a cópia da nuvem
+        const syncAliases = [...new Set([...categorySyncIds(existingByName), payload.syncId])].filter(id => id !== existingByName.syncId);
+        await db.debtCategories.update(existingByName.id, { syncAliases });
+        existingByName.syncAliases = syncAliases;
+        bySyncId.set(payload.syncId, existingByName);
+        updated += 1;
+        continue;
+      }
+
+      const id = await db.debtCategories.add(payload);
+      const inserted = { ...payload, id };
+      bySyncId.set(payload.syncId, inserted);
+      byName.set(categoryKey(payload), inserted);
       imported += 1;
       continue;
     }
 
     if (toComparableTime(payload.updatedAt) > toComparableTime(localCategory.updatedAt || localCategory.createdAt)) {
-      await db.debtCategories.update(localCategory.id, payload);
+      await db.debtCategories.update(localCategory.id, { ...payload, syncId: localCategory.syncId });
+      Object.assign(localCategory, { ...payload, syncId: localCategory.syncId });
       updated += 1;
       continue;
     }
@@ -367,12 +426,20 @@ export async function mergeRemoteDebtCategories(remoteCategories = []) {
 }
 
 export async function mergeRemoteTransactionCategories(remoteCategories = []) {
+  return db.transaction('rw', db.transactionCategories, db.transactions, async () => {
+    await consolidateCategories(db.transactionCategories, db.transactions, true);
+    return mergeTransactionCategories(remoteCategories);
+  });
+}
+
+async function mergeTransactionCategories(remoteCategories) {
   if (!Array.isArray(remoteCategories) || remoteCategories.length === 0) {
     return { imported: 0, updated: 0, skipped: 0 };
   }
 
   const localCategories = await ensureTransactionCategorySyncMetadata();
-  const bySyncId = new Map(localCategories.filter(category => category.syncId).map(category => [category.syncId, category]));
+  const bySyncId = new Map(localCategories.flatMap(category => categorySyncIds(category).map(id => [id, category])));
+  const byName = new Map(localCategories.map(category => [categoryKey(category, true), category]));
   let imported = 0;
   let updated = 0;
   let skipped = 0;
@@ -391,13 +458,29 @@ export async function mergeRemoteTransactionCategories(remoteCategories = []) {
     };
 
     if (!localCategory) {
-      await db.transactionCategories.add(payload);
+      // Verificar se já existe categoria com o mesmo nome e tipo (evitar duplicatas)
+      const existingByName = byName.get(categoryKey(payload, true));
+      if (existingByName) {
+        // Preservar o ID principal e reconhecer também a cópia da nuvem
+        const syncAliases = [...new Set([...categorySyncIds(existingByName), payload.syncId])].filter(id => id !== existingByName.syncId);
+        await db.transactionCategories.update(existingByName.id, { syncAliases });
+        existingByName.syncAliases = syncAliases;
+        bySyncId.set(payload.syncId, existingByName);
+        updated += 1;
+        continue;
+      }
+
+      const id = await db.transactionCategories.add(payload);
+      const inserted = { ...payload, id };
+      bySyncId.set(payload.syncId, inserted);
+      byName.set(categoryKey(payload, true), inserted);
       imported += 1;
       continue;
     }
 
     if (toComparableTime(payload.updatedAt) > toComparableTime(localCategory.updatedAt || localCategory.createdAt)) {
-      await db.transactionCategories.update(localCategory.id, payload);
+      await db.transactionCategories.update(localCategory.id, { ...payload, syncId: localCategory.syncId });
+      Object.assign(localCategory, { ...payload, syncId: localCategory.syncId });
       updated += 1;
       continue;
     }
@@ -417,7 +500,7 @@ export async function mergeRemoteDebts(remoteDebts = []) {
   const localBySyncId = new Map(localDebts.filter(debt => debt.syncId).map(debt => [debt.syncId, debt]));
   const localByLegacyId = new Map(localDebts.filter(debt => debt.id != null).map(debt => [String(debt.id), debt]));
   const localCategories = await ensureDebtCategorySyncMetadata();
-  const categoryIdBySyncId = new Map(localCategories.filter(category => category.syncId).map(category => [category.syncId, category.id]));
+  const categoryIdBySyncId = new Map(localCategories.flatMap(category => categorySyncIds(category).map(id => [id, category.id])));
 
   let imported = 0;
   let updated = 0;
@@ -475,7 +558,7 @@ export async function mergeRemoteTransactions(remoteTransactions = []) {
   const localBySyncId = new Map(localTransactions.filter(transaction => transaction.syncId).map(transaction => [transaction.syncId, transaction]));
   const localByLegacyId = new Map(localTransactions.filter(transaction => transaction.id != null).map(transaction => [String(transaction.id), transaction]));
   const localCategories = await ensureTransactionCategorySyncMetadata();
-  const categoryIdBySyncId = new Map(localCategories.filter(category => category.syncId).map(category => [category.syncId, category.id]));
+  const categoryIdBySyncId = new Map(localCategories.flatMap(category => categorySyncIds(category).map(id => [id, category.id])));
 
   let imported = 0;
   let updated = 0;
