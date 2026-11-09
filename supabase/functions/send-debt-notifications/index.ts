@@ -16,14 +16,23 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 serve(async () => {
   try {
-    // Data de hoje e amanhã (UTC)
+    // Datas: hoje, amanhã, 3 dias, 7 dias (UTC)
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
+    
     const tomorrow = new Date(today);
     tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+    
+    const in3Days = new Date(today);
+    in3Days.setUTCDate(in3Days.getUTCDate() + 3);
+    
+    const in7Days = new Date(today);
+    in7Days.setUTCDate(in7Days.getUTCDate() + 7);
 
     const todayStr = today.toISOString().split('T')[0];
     const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    const in3DaysStr = in3Days.toISOString().split('T')[0];
+    const in7DaysStr = in7Days.toISOString().split('T')[0];
 
     // Buscar todos os tokens FCM registrados
     const { data: tokens, error: tokenError } = await supabase
@@ -34,19 +43,19 @@ serve(async () => {
       return new Response(JSON.stringify({ error: 'Nenhum token FCM encontrado' }), { status: 404 });
     }
 
-    // Buscar dívidas vencendo hoje ou amanhã (não pagas)
+    // Buscar dívidas vencendo hoje, amanhã, em 3 ou 7 dias (não pagas)
     const { data: debts, error: debtError } = await supabase
       .from('debts')
       .select('user_id, name, amount, due_date')
       .eq('is_paid', false)
-      .in('due_date', [todayStr, tomorrowStr]);
+      .in('due_date', [todayStr, tomorrowStr, in3DaysStr, in7DaysStr]);
 
     if (debtError) {
       return new Response(JSON.stringify({ error: debtError.message }), { status: 500 });
     }
 
     if (!debts?.length) {
-      return new Response(JSON.stringify({ message: 'Nenhuma dívida vencendo hoje ou amanhã' }), { status: 200 });
+      return new Response(JSON.stringify({ message: 'Nenhuma dívida vencendo nos próximos 7 dias' }), { status: 200 });
     }
 
     // Agrupar dívidas por usuário
@@ -65,42 +74,78 @@ serve(async () => {
       const tokenRow = tokens.find(t => t.user_id === userId);
       if (!tokenRow) continue;
 
-      // Separar dívidas de hoje e amanhã
+      // Separar dívidas por prazo
       const todayDebts = userDebts.filter(d => d.due_date === todayStr);
       const tomorrowDebts = userDebts.filter(d => d.due_date === tomorrowStr);
+      const in3DaysDebts = userDebts.filter(d => d.due_date === in3DaysStr);
+      const in7DaysDebts = userDebts.filter(d => d.due_date === in7DaysStr);
 
       const formatBRL = (v: number) =>
         v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
       const notifications = [];
 
+      // ─── HOJE ───
       if (todayDebts.length === 1) {
         notifications.push({
-          title: '⚠️ Dívida vence HOJE!',
+          title: '🚨 Dívida vence HOJE!',
           body: `${todayDebts[0].name} — ${formatBRL(todayDebts[0].amount)}`,
           tag: `today-${todayDebts[0].name}`,
         });
       } else if (todayDebts.length > 1) {
         const total = todayDebts.reduce((s, d) => s + d.amount, 0);
         notifications.push({
-          title: `⚠️ ${todayDebts.length} dívidas vencem HOJE!`,
+          title: `🚨 ${todayDebts.length} dívidas vencem HOJE!`,
           body: `Total: ${formatBRL(total)} — Abra o app para ver`,
           tag: 'today-multiple',
         });
       }
 
+      // ─── AMANHÃ ───
       if (tomorrowDebts.length === 1) {
         notifications.push({
-          title: '📅 Dívida vence amanhã',
+          title: '⚠️ Dívida vence amanhã',
           body: `${tomorrowDebts[0].name} — ${formatBRL(tomorrowDebts[0].amount)}`,
           tag: `tomorrow-${tomorrowDebts[0].name}`,
         });
       } else if (tomorrowDebts.length > 1) {
         const total = tomorrowDebts.reduce((s, d) => s + d.amount, 0);
         notifications.push({
-          title: `📅 ${tomorrowDebts.length} dívidas vencem amanhã`,
+          title: `⚠️ ${tomorrowDebts.length} dívidas vencem amanhã`,
           body: `Total: ${formatBRL(total)} — Abra o app para ver`,
           tag: 'tomorrow-multiple',
+        });
+      }
+
+      // ─── 3 DIAS ───
+      if (in3DaysDebts.length === 1) {
+        notifications.push({
+          title: '📅 Dívida vence em 3 dias',
+          body: `${in3DaysDebts[0].name} — ${formatBRL(in3DaysDebts[0].amount)}`,
+          tag: `3days-${in3DaysDebts[0].name}`,
+        });
+      } else if (in3DaysDebts.length > 1) {
+        const total = in3DaysDebts.reduce((s, d) => s + d.amount, 0);
+        notifications.push({
+          title: `📅 ${in3DaysDebts.length} dívidas vencem em 3 dias`,
+          body: `Total: ${formatBRL(total)}`,
+          tag: '3days-multiple',
+        });
+      }
+
+      // ─── 7 DIAS ───
+      if (in7DaysDebts.length === 1) {
+        notifications.push({
+          title: '📆 Dívida vence em 1 semana',
+          body: `${in7DaysDebts[0].name} — ${formatBRL(in7DaysDebts[0].amount)}`,
+          tag: `7days-${in7DaysDebts[0].name}`,
+        });
+      } else if (in7DaysDebts.length > 1) {
+        const total = in7DaysDebts.reduce((s, d) => s + d.amount, 0);
+        notifications.push({
+          title: `📆 ${in7DaysDebts.length} dívidas vencem em 1 semana`,
+          body: `Total: ${formatBRL(total)}`,
+          tag: '7days-multiple',
         });
       }
 

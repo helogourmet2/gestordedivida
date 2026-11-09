@@ -4,8 +4,11 @@
 const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
-// Modelo do Groq (llama3-70b é excelente e gratuito)
-const GROQ_MODEL = 'llama3-70b-8192';
+// Modelo do Groq (gpt-oss-20b é rápido e gratuito em 2026)
+const GROQ_MODEL = 'openai/gpt-oss-20b';
+
+// Debug - verificar se a API key está sendo lida
+console.log('[Groq] API Key carregada:', GROQ_API_KEY ? `${GROQ_API_KEY.substring(0, 10)}...` : 'NÃO ENCONTRADA');
 
 // Implementação compatível com a interface do Gemini
 export const geminiModel = {
@@ -16,6 +19,13 @@ export const geminiModel = {
     return {
       sendMessage: async (userMessage) => {
         try {
+          if (!GROQ_API_KEY) {
+            throw new Error('VITE_GROQ_API_KEY não configurada no .env');
+          }
+
+          console.log('[Groq] Enviando mensagem para:', GROQ_API_URL);
+          console.log('[Groq] Usando API Key:', GROQ_API_KEY.substring(0, 15) + '...');
+          
           const messages = [
             { role: 'system', content: systemPrompt },
             ...chatHistory,
@@ -36,8 +46,11 @@ export const geminiModel = {
             }),
           });
 
+          console.log('[Groq] Response status:', response.status);
+
           if (!response.ok) {
             const error = await response.text();
+            console.error('[Groq] Erro completo:', error);
             throw new Error(`Groq API error: ${response.status} - ${error}`);
           }
 
@@ -56,7 +69,7 @@ export const geminiModel = {
             }
           };
         } catch (error) {
-          console.error('[Groq AI] Erro:', error);
+          console.error('[Groq AI] Erro completo:', error);
           throw error;
         }
       }
