@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Bell, BellOff, Trash2, Download, ChevronRight, Info, Smartphone, Lock, LockOpen, X, Delete, FlaskConical, CheckCircle, XCircle, Loader, AlertCircle } from 'lucide-react';
+import { Bell, BellOff, Trash2, Download, ChevronRight, Info, Smartphone, Lock, LockOpen, X, Delete, FlaskConical, CheckCircle, XCircle, Loader, AlertCircle, RefreshCw } from 'lucide-react';
 import { useNotifications } from '../hooks/useNotifications';
 import { requestFCMToken, auth } from '../lib/firebase';
 import { db } from '../db/database';
 import { usePin } from '../hooks/usePin';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../lib/supabase';
+import { fixDebtCategories, fixTransactionCategories } from '../utils/fixCategories';
 
 const SERVICE_ROLE_KEY = null; // não expor no frontend — o teste usa a Edge Function diretamente
 
@@ -243,6 +244,8 @@ export default function Config() {
   const { notificationsEnabled, requestPermission } = useNotifications();
   const [clearing, setClearing] = useState(false);
   const [cleared, setCleared] = useState(false);
+  const [fixingCategories, setFixingCategories] = useState(false);
+  const [categoriesFixed, setCategoriesFixed] = useState(false);
 
   // PIN
   const { pinEnabled, setPin, removePin, verifyPin } = usePin();
@@ -265,6 +268,23 @@ export default function Config() {
       console.error(e);
     } finally {
       setClearing(false);
+    }
+  };
+
+  const handleFixCategories = async () => {
+    setFixingCategories(true);
+    try {
+      await fixDebtCategories();
+      await fixTransactionCategories();
+      setCategoriesFixed(true);
+      setTimeout(() => setCategoriesFixed(false), 3000);
+      // Recarregar a página para refletir as mudanças
+      setTimeout(() => window.location.reload(), 1000);
+    } catch (e) {
+      console.error('Erro ao corrigir categorias:', e);
+      alert('Erro ao corrigir categorias. Veja o console.');
+    } finally {
+      setFixingCategories(false);
     }
   };
 
@@ -413,6 +433,25 @@ export default function Config() {
               <div className="text-left">
                 <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Exportar dados</p>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400">Baixar backup em JSON</p>
+              </div>
+            </div>
+            <ChevronRight size={18} className="text-neutral-400" />
+          </button>
+
+          <button
+            onClick={handleFixCategories}
+            disabled={fixingCategories || categoriesFixed}
+            className="w-full flex items-center justify-between p-4 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950 flex items-center justify-center">
+                <RefreshCw size={18} className={`text-blue-600 dark:text-blue-400 ${fixingCategories ? 'animate-spin' : ''}`} />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                  {categoriesFixed ? 'Categorias corrigidas!' : fixingCategories ? 'Corrigindo...' : 'Corrigir nomes das categorias'}
+                </p>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400">Corrige problemas de encoding (CartÃ£o → Cartão)</p>
               </div>
             </div>
             <ChevronRight size={18} className="text-neutral-400" />

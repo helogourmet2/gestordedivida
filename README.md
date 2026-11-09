@@ -40,7 +40,7 @@ Edite o `.env` com os valores do Firebase e Supabase (veja instruções abaixo).
 4. Substitua `SEU_PROJECT_REF` no SQL pelo ref do seu projeto Supabase
 5. Em **Settings → Vault**, adicione o secret `FCM_SERVER_KEY` com a chave do servidor FCM
 
-### 4. Deploy da Edge Function
+### 4. Deploy das Edge Functions
 
 ```bash
 # Instale o CLI do Supabase
@@ -49,9 +49,15 @@ npm install -g supabase
 # Login
 supabase login
 
-# Deploy da função
+# Deploy das funções (use o script automatizado)
+.\scripts\deploy-supabase.ps1
+
+# Ou manualmente:
+supabase functions deploy keep-alive --project-ref xdskhspqrqeraqnshuey
 supabase functions deploy send-debt-notifications --project-ref xdskhspqrqeraqnshuey
 ```
+
+**⚠️ Importante**: A função `keep-alive` mantém o projeto Supabase ativo (evita pausar por inatividade)
 
 Após o deploy, configure os secrets da Edge Function no Supabase Dashboard:
 **Edge Functions → send-debt-notifications → Secrets**
@@ -97,6 +103,26 @@ npm run dev
 | `npm run build` | Build de produção |
 | `npm run preview` | Preview do build |
 | `npm run lint` | Lint do código |
+
+---
+
+## 🧪 Testes
+
+### Testar notificações push
+```bash
+# Execute o script de teste
+.\scripts\test-notifications.ps1
+```
+
+### Testar manualmente
+Veja o guia completo em: **[test-push-notifications.md](./test-push-notifications.md)**
+
+---
+
+## 📋 Documentação
+
+- **[CONTAS_E_SERVICOS.md](./CONTAS_E_SERVICOS.md)** - Lista de todas as contas e serviços conectados
+- **[test-push-notifications.md](./test-push-notifications.md)** - Guia completo de testes de notificações
 
 ---
 
