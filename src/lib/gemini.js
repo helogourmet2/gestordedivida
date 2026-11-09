@@ -1,16 +1,19 @@
-import { initializeApp, getApps } from 'firebase/app';
-import { getAI, getGenerativeModel, GoogleAIBackend } from 'firebase/ai';
-import { firebaseConfig } from './firebase';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Reutiliza a instância do Firebase se já existir
-const app = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig);
+// API Key do Gemini (grátis, sem cartão de crédito)
+// Obtenha em: https://aistudio.google.com/app/apikey
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyAgqunr8bS1LlmRL0QMtqzQzqjPLqjAm5c';
 
-// Força o Gemini Developer API (gratuito, sem cartão)
-const ai = getAI(app, { backend: new GoogleAIBackend() });
+// Inicializar Gemini AI
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
-// Gemini 2.5 Flash
-export const geminiModel = getGenerativeModel(ai, {
-  model: 'gemini-2.5-flash',
+// Gemini 2.0 Flash (modelo gratuito mais recente)
+export const geminiModel = genAI.getGenerativeModel({ 
+  model: 'gemini-2.0-flash-exp',
+  generationConfig: {
+    temperature: 0.7,
+    maxOutputTokens: 1000,
+  }
 });
 
 // ─── Prompt do sistema ────────────────────────────────────────────────────────
