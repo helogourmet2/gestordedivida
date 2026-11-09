@@ -44,7 +44,7 @@ export default function Assistente() {
           </div>
           <div>
             <h2 className="text-sm font-bold leading-tight">Assistente IA</h2>
-            <p className="text-[10px] text-neutral-400 dark:text-neutral-500">Gemini · seus dados reais</p>
+            <p className="text-[10px] text-neutral-400 dark:text-neutral-500">Groq Llama 3 · seus dados reais</p>
           </div>
         </div>
         <button

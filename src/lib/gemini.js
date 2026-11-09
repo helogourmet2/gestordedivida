@@ -1,20 +1,68 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+// Groq API - IA rápida e gratuita
+// Obtenha sua chave em: https://console.groq.com/keys
 
-// API Key do Gemini (grátis, sem cartão de crédito)
-// Obtenha em: https://aistudio.google.com/app/apikey
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyAgqunr8bS1LlmRL0QMtqzQzqjPLqjAm5c';
+const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
-// Inicializar Gemini AI
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+// Modelo do Groq (llama3-70b é excelente e gratuito)
+const GROQ_MODEL = 'llama3-70b-8192';
 
-// Gemini 2.0 Flash (modelo gratuito mais recente)
-export const geminiModel = genAI.getGenerativeModel({ 
-  model: 'gemini-2.0-flash-exp',
-  generationConfig: {
-    temperature: 0.7,
-    maxOutputTokens: 1000,
+// Implementação compatível com a interface do Gemini
+export const geminiModel = {
+  startChat: ({ systemInstruction, history }) => {
+    const systemPrompt = systemInstruction?.parts?.[0]?.text || '';
+    const chatHistory = history || [];
+    
+    return {
+      sendMessage: async (userMessage) => {
+        try {
+          const messages = [
+            { role: 'system', content: systemPrompt },
+            ...chatHistory,
+            { role: 'user', content: userMessage }
+          ];
+
+          const response = await fetch(GROQ_API_URL, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${GROQ_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: GROQ_MODEL,
+              messages,
+              temperature: 0.7,
+              max_tokens: 1000,
+            }),
+          });
+
+          if (!response.ok) {
+            const error = await response.text();
+            throw new Error(`Groq API error: ${response.status} - ${error}`);
+          }
+
+          const data = await response.json();
+          const assistantMessage = data.choices[0].message.content;
+          
+          // Adiciona ao histórico
+          chatHistory.push(
+            { role: 'user', content: userMessage },
+            { role: 'assistant', content: assistantMessage }
+          );
+
+          return {
+            response: {
+              text: () => assistantMessage
+            }
+          };
+        } catch (error) {
+          console.error('[Groq AI] Erro:', error);
+          throw error;
+        }
+      }
+    };
   }
-});
+};
 
 // ─── Prompt do sistema ────────────────────────────────────────────────────────
 export function buildSystemPrompt(context) {
