@@ -56,7 +56,7 @@ export default function CategoryForm({ onClose, category = null, receivable = fa
   return (
     <div className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-lg bg-white dark:bg-neutral-900 rounded-t-3xl sm:rounded-3xl p-6 animate-slide-up">
+      <div className="relative w-full max-w-lg bg-white text-neutral-900 dark:bg-neutral-900 dark:text-neutral-100 rounded-t-3xl sm:rounded-3xl p-6 animate-slide-up">
 
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold">
@@ -79,7 +79,7 @@ export default function CategoryForm({ onClose, category = null, receivable = fa
               value={form.name}
               onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
               placeholder="Ex: Freelance, Mercado..."
-              className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all text-base"
+              className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-500 text-base"
               autoFocus
               required
             />

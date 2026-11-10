@@ -60,7 +60,7 @@ export default function TransactionForm({ onClose, initialType = 'despesa', tran
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-lg bg-white dark:bg-neutral-900 rounded-t-3xl sm:rounded-3xl p-6 animate-slide-up max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-white text-neutral-900 dark:bg-neutral-900 dark:text-neutral-100 rounded-t-3xl sm:rounded-3xl p-6 animate-slide-up max-h-[90vh] overflow-y-auto">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -107,7 +107,7 @@ export default function TransactionForm({ onClose, initialType = 'despesa', tran
               value={form.amount}
               onChange={e => handleChange('amount', e.target.value)}
               placeholder="0,00"
-              className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all text-base font-mono"
+              className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-500 text-base font-mono"
               required
             />
           </div>
@@ -121,7 +121,7 @@ export default function TransactionForm({ onClose, initialType = 'despesa', tran
               type="date"
               value={form.date}
               onChange={e => handleChange('date', e.target.value)}
-              className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all text-base"
+              className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-500 text-base"
               required
             />
           </div>
@@ -165,7 +165,7 @@ export default function TransactionForm({ onClose, initialType = 'despesa', tran
               value={form.description}
               onChange={e => handleChange('description', e.target.value)}
               placeholder="Ex: Pagamento fatura, Salário mês..."
-              className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all text-base"
+              className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-500 text-base"
             />
           </div>
 
