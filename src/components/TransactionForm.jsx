@@ -19,7 +19,7 @@ export default function TransactionForm({ onClose, initialType = 'despesa', tran
   });
   const [saving, setSaving] = useState(false);
 
-  const filteredCategories = categories.filter(c => c.type === form.type);
+  const filteredCategories = categories.filter(c => c.type === form.type && !c.syncId?.startsWith('receivable-category-'));
 
   const handleChange = (field, value) => {
     setForm(prev => {

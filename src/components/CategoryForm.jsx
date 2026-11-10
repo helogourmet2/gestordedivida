@@ -14,13 +14,13 @@ const COLOR_OPTIONS = [
   { value: 'bg-neutral-500', label: 'Cinza' },
 ];
 
-export default function CategoryForm({ onClose, category = null }) {
+export default function CategoryForm({ onClose, category = null, receivable = false }) {
   const { addTransactionCategory, updateTransactionCategory } = useTransactions();
   const isEditing = !!category;
 
   const [form, setForm] = useState({
     name: category?.name || '',
-    type: category?.type || 'despesa',
+    type: receivable ? 'receita' : category?.type || 'despesa',
     color: category?.color || 'bg-neutral-500',
   });
   const [saving, setSaving] = useState(false);
@@ -42,6 +42,7 @@ export default function CategoryForm({ onClose, category = null }) {
           type: form.type,
           color: form.color,
           icon: 'Tag',
+          ...(receivable ? { syncId: `receivable-category-${crypto.randomUUID()}` } : {}),
         });
       }
       onClose();
@@ -85,7 +86,7 @@ export default function CategoryForm({ onClose, category = null }) {
           </div>
 
           {/* Tipo */}
-          <div>
+          {!receivable && <div>
             <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-1.5">
               Tipo
             </label>
@@ -107,7 +108,7 @@ export default function CategoryForm({ onClose, category = null }) {
                 </button>
               ))}
             </div>
-          </div>
+          </div>}
 
           {/* Cor */}
           <div>
@@ -140,7 +141,7 @@ export default function CategoryForm({ onClose, category = null }) {
             <span className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-full text-white ${
               form.type === 'receita' ? 'bg-green-600' : 'bg-red-600'
             }`}>
-              {form.type}
+              {receivable ? 'A receber' : form.type}
             </span>
           </div>
 

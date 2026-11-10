@@ -133,7 +133,7 @@ export default function TransactionCard({ transaction, category, onEdit, onDelet
 
                 <button
                   onClick={onEdit}
-                  className="p-2 rounded-xl transition-all active:scale-90 opacity-0 group-hover:opacity-100"
+                  className="p-2 rounded-xl transition-all active:scale-90 sm:opacity-0 sm:group-hover:opacity-100"
                   style={{ color: isReceita ? '#444' : 'rgba(255,255,255,0.4)' }}
                   aria-label="Editar"
                 >

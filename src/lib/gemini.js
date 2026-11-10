@@ -93,12 +93,17 @@ export function buildSystemPrompt(context) {
     return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
   });
 
+  const receivableIds = new Set(categories.filter(category => category.syncId?.startsWith('receivable-category-')).map(category => category.id));
+  const pendingReceivables = transactions.filter(item => receivableIds.has(item.categoryId) && !item.isPaid);
+  const totalReceivable = pendingReceivables.reduce((sum, item) => sum + item.amount, 0);
+
   const totalReceitas = monthTx.filter(t => t.type === 'receita' && t.isPaid).reduce((s, t) => s + t.amount, 0);
   const totalDespesas = monthTx.filter(t => t.type === 'despesa' && t.isPaid).reduce((s, t) => s + t.amount, 0);
   const totalPendenteMes = monthTx.filter(t => t.type === 'despesa' && !t.isPaid).reduce((s, t) => s + t.amount, 0);
 
   const formatBRL = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   const formatDate = d => new Date(d).toLocaleDateString('pt-BR');
+  const receivablesList = pendingReceivables.slice(0, 15).map(item => `- ${item.description}: ${formatBRL(item.amount)} (vence ${formatDate(item.date)})`).join('\n');
 
   const debtsList = pendingDebts
     .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
@@ -126,7 +131,12 @@ Total pendente: ${formatBRL(totalPending)}
 Vencidas: ${overdueDebts.length} dívidas — ${formatBRL(totalOverdue)}
 ${debtsList || 'Nenhuma dívida pendente.'}
 
-📊 FINANÇAS DO MÊS ATUAL:
+💰 DÍVIDAS A RECEBER (${pendingReceivables.length} pendentes):
+Total a receber: ${formatBRL(totalReceivable)}
+${receivablesList || 'Nenhuma dívida a receber pendente.'}
+Estes valores são devidos ao usuário por outras pessoas; não são dívidas que ele precisa pagar.
+
+📊 MOVIMENTAÇÕES DO MÊS ATUAL:
 Receitas recebidas: ${formatBRL(totalReceitas)}
 Despesas pagas: ${formatBRL(totalDespesas)}
 Despesas pendentes: ${formatBRL(totalPendenteMes)}

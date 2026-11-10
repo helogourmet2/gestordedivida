@@ -63,10 +63,10 @@ export default function Assistente() {
             key={i}
             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
-            <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+            <div className={`max-w-[85%] rounded-2xl px-4 py-3 leading-relaxed whitespace-pre-wrap break-words ${
               msg.role === 'user'
-                ? 'bg-red-600 text-white rounded-br-sm'
-                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 rounded-bl-sm'
+                ? 'text-sm bg-red-600 text-white rounded-br-sm'
+                : 'text-base bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 rounded-bl-sm'
             }`}>
               {msg.text}
             </div>

@@ -28,6 +28,7 @@ vi.mock('dexie', () => {
     debts = new Table();
     transactions = new Table();
     version() { return { stores: () => ({ upgrade() {} }) }; }
+    on() {}
     async transaction(...args) { return args.at(-1)(); }
   } };
 });

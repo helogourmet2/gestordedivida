@@ -6,7 +6,7 @@ export function useGeminiChat() {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      text: 'Olá! Sou seu assistente financeiro. Posso analisar suas dívidas, receitas e despesas e te ajudar a tomar decisões. O que você quer saber?',
+      text: 'Olá! Sou seu assistente financeiro. Posso analisar suas dívidas e valores a receber e te ajudar a tomar decisões. O que você quer saber?',
     },
   ]);
   const [loading, setLoading] = useState(false);

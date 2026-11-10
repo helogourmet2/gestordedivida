@@ -5,7 +5,7 @@ const navItems = [
   { to: '/',           icon: LayoutDashboard, label: 'Início' },
   { to: '/calendario', icon: Calendar,         label: 'Calendário' },
   { to: '/dividas',    icon: List,             label: 'Dívidas' },
-  { to: '/financas',   icon: ArrowLeftRight,   label: 'Finanças' },
+  { to: '/a-receber',   icon: ArrowLeftRight,   label: 'A receber' },
   { to: '/assistente', icon: Sparkles,         label: 'IA' },
   { to: '/config',     icon: Settings,         label: 'Config' },
 ];

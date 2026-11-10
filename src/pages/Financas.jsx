@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Plus, Settings2, TrendingUp, TrendingDown, Wallet, Clock, ArrowUpRight } from 'lucide-react';
-import { useTransactions, useMonthSummary } from '../hooks/useTransactions';
-import { formatCurrency, formatDate } from '../utils/formatters';
+import { Plus, Settings2, TrendingUp, TrendingDown, Wallet, Clock } from 'lucide-react';
+import { useTransactions } from '../hooks/useTransactions';
+import { formatCurrency } from '../utils/formatters';
 import { MONTHS } from '../utils/constants';
 import TransactionForm from '../components/TransactionForm';
 import CategoryForm from '../components/CategoryForm';
@@ -15,7 +15,7 @@ const FILTERS = [
   { id: 'pendente', label: 'Pendentes' },
 ];
 
-export default function Financas() {
+export default function Financas({ legacyOnly = false }) {
   const now = new Date();
   const [viewMonth, setViewMonth] = useState(now.getMonth());
   const [viewYear, setViewYear] = useState(now.getFullYear());
@@ -27,8 +27,10 @@ export default function Financas() {
   const [editingCategory, setEditingCategory] = useState(null);
   const [initialType, setInitialType] = useState('despesa');
 
-  const { allTransactions, categories, deleteTransaction, markTransactionAsPaid, markTransactionAsUnpaid, deleteTransactionCategory } = useTransactions();
-  const summary = useMonthSummary(viewYear, viewMonth);
+  const { allTransactions: allItems, categories: allCategories, deleteTransaction, markTransactionAsPaid, markTransactionAsUnpaid, deleteTransactionCategory } = useTransactions();
+  const categories = allCategories.filter(category => !category.syncId?.startsWith('receivable-category-'));
+  const categoryIds = new Set(categories.map(category => category.id));
+  const allTransactions = allItems.filter(item => categoryIds.has(item.categoryId));
 
   // Filtrar por mês selecionado
   const monthStart = new Date(viewYear, viewMonth, 1);
@@ -38,6 +40,9 @@ export default function Financas() {
     const d = new Date(t.date);
     return d >= monthStart && d <= monthEnd;
   });
+
+  const sum = (type, paid) => monthTransactions.filter(item => item.type === type && !!item.isPaid === paid).reduce((total, item) => total + item.amount, 0);
+  const summary = { totalReceitas: sum('receita', true), totalDespesas: sum('despesa', true), totalAReceber: sum('receita', false), totalPendente: sum('despesa', false), saldo: sum('receita', true) - sum('despesa', true) };
 
   const filtered = monthTransactions.filter(t => {
     if (filter === 'receita') return t.type === 'receita';
@@ -136,7 +141,7 @@ export default function Financas() {
       </div>
 
       {/* Botões de ação rápida */}
-      <div className="grid grid-cols-3 gap-2">
+      {!legacyOnly && <div className="grid grid-cols-3 gap-2">
         <button onClick={() => openAdd('receita')}
           className="flex items-center justify-center gap-1.5 py-3 rounded-xl text-sm font-black transition-all active:scale-95"
           style={{ background: 'var(--green)', color: '#fff' }}>
@@ -154,6 +159,7 @@ export default function Financas() {
         </button>
       </div>
 
+      }
       {/* Gerenciar categorias */}
       {showCats && (
         <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden animate-fade-in">

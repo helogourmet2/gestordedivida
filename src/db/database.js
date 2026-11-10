@@ -222,7 +222,7 @@ db.version(5).stores({
 
 function categoryKey(category, typed = false) {
   const name = String(category.name || '').trim().normalize('NFC').toLowerCase();
-  return typed ? `${category.type}|${name}` : name;
+  return typed ? `${category.type}|${category.syncId?.startsWith('receivable-category-') ? 'receivable' : 'legacy'}|${name}` : name;
 }
 
 function categorySyncIds(category) {
@@ -254,6 +254,17 @@ db.version(6).stores({}).upgrade(async tx => {
   await consolidateCategories(tx.table('debtCategories'), tx.table('debts'));
   await consolidateCategories(tx.table('transactionCategories'), tx.table('transactions'), true);
 });
+
+async function seedReceivableCategories(tx) {
+  const now = new Date().toISOString();
+  await tx.table('transactionCategories').bulkAdd([
+    { name: 'Empréstimo', syncId: 'receivable-category-emprestimo', color: 'bg-orange-500' },
+    { name: 'Vendas', syncId: 'receivable-category-vendas', color: 'bg-green-600' },
+  ].map(category => ({ ...category, type: 'receita', icon: 'Tag', isDefault: true, createdAt: now, updatedAt: now })));
+}
+
+db.version(7).stores({}).upgrade(seedReceivableCategories);
+db.on('populate', seedReceivableCategories);
 
 export async function ensureDebtSyncMetadata() {
   const debts = await db.debts.toArray();
@@ -878,7 +889,8 @@ export async function deleteTransactionCategory(id) {
   if (!category) return id;
 
   const fallback = await db.transactionCategories
-    .filter(cat => cat.type === category.type && cat.isDefault && cat.id !== id)
+    .filter(cat => cat.type === category.type && cat.isDefault && cat.id !== id
+      && !!cat.syncId?.startsWith('receivable-category-') === !!category.syncId?.startsWith('receivable-category-'))
     .first();
   const affectedIds = (await db.transactions.where('categoryId').equals(id).toArray()).map(item => item.id);
 
