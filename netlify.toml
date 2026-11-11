@@ -3,6 +3,11 @@
   publish = "dist"
   functions = "netlify/functions"
 
+[build.environment]
+  # Endereço público do projeto, também utilizado pelo frontend.
+  # As chaves privadas continuam sujeitas à verificação de segredos.
+  SECRETS_SCAN_OMIT_KEYS = "SUPABASE_URL"
+
 [functions]
   node_bundler = "esbuild"
 
