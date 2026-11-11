@@ -1,10 +1,12 @@
-import { env, environment, database, mercadoPago, json, withCors } from '../lib/billing.mjs';
+import { environment, database, mercadoPago, json, withCors } from '../lib/billing.mjs';
 
 // Só divulga o estado geral da integração, nunca chaves ou dados de usuários.
 async function handler(request) {
   if (request.method !== 'GET') return json({ ready: false }, 405);
+  const required = ['FIREBASE_PROJECT_ID', 'SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'MP_ACCESS_TOKEN', 'MP_WEBHOOK_SECRET', 'MP_ENVIRONMENT'];
+  const missing = required.filter(name => !process.env[name]);
+  if (missing.length) return json({ ready: false, reason: 'configuration', missing }, 503);
   try {
-    for (const name of ['FIREBASE_PROJECT_ID', 'SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'MP_ACCESS_TOKEN', 'MP_WEBHOOK_SECRET']) env(name);
     environment();
   } catch { return json({ ready: false, reason: 'configuration' }, 503); }
   try {
