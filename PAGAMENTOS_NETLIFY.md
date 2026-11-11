@@ -71,7 +71,15 @@ guileless-baklava-7ff1a1.netlify.app
 
 Use somente o domínio, sem https:// e sem caminho. O login continua usando o Firebase. A configuração VITE_FIREBASE_AUTH_DOMAIN continua sendo a do projeto Firebase; não a substitua pelo domínio do Netlify.
 
-## 6. Publicação e conferência
+## 6. Tornar a produção pública para receber o webhook
+
+Na conferência de 10/11/2026, o endereço do site e o caminho do webhook responderam com HTTP 401 e uma tela de login do Netlify. Isso impede o Mercado Pago de alcançar a função.
+
+Em Project configuration → General → Visitor access → Project visibility, deixe a produção como Public. Confira também se existe Password Protection ou Team login protection aplicada à produção. Remova essa barreira da produção; o login Google do aplicativo continua ativo. Não confunda o acesso público ao site e ao webhook com acesso aos dados ou aprovação de pagamento: o usuário ainda precisa se autenticar e o webhook valida a assinatura.
+
+Referência: https://docs.netlify.com/manage/security/secure-access-to-sites/project-visibility/
+
+## 7. Publicação e conferência
 
 O repositório contém netlify.toml com build npm run build, publicação dist e funções em netlify/functions. O redirecionamento para index.html mantém as rotas do aplicativo. O arquivo inclui o cabeçalho necessário para o popup de login do Google.
 
