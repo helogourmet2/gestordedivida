@@ -66,3 +66,22 @@ it('rejects forged webhooks without touching payment or access data', async () =
   expect((await webhookHandler(request('mercadopago-webhook', 'POST'))).status).toBe(401);
   expect(fetch).not.toHaveBeenCalled();
 });
+
+it('allows Firebase preflight without a login token and without fetching data', async () => {
+  const fetch = vi.fn(); vi.stubGlobal('fetch', fetch);
+  const response = await statusHandler(new Request('https://app.example/.netlify/functions/billing-status', { method: 'OPTIONS', headers: { origin: 'https://gestor-dedividas.web.app', 'access-control-request-headers': 'authorization' } }));
+  expect(response.status).toBe(204);
+  expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://gestor-dedividas.web.app');
+  expect(response.headers.get('Access-Control-Allow-Headers')).toContain('Authorization');
+  expect(fetch).not.toHaveBeenCalled();
+});
+it('keeps authentication errors readable by the Firebase frontend', async () => {
+  const response = await statusHandler(new Request('https://app.example/.netlify/functions/billing-status', { headers: { origin: 'https://gestor-dedividas.web.app' } }));
+  expect(response.status).toBe(401);
+  expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://gestor-dedividas.web.app');
+});
+it('rejects calls from other browser origins', async () => {
+  const response = await statusHandler(new Request('https://app.example/.netlify/functions/billing-status', { method: 'OPTIONS', headers: { origin: 'https://other.example' } }));
+  expect(response.status).toBe(403);
+  expect(response.headers.has('Access-Control-Allow-Origin')).toBe(false);
+});

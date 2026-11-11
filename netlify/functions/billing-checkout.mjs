@@ -1,4 +1,4 @@
-import { authenticate, requireMethod, startTrial, database, mercadoPago, recordPayment, environment, json, failure } from '../lib/billing.mjs';
+import { withCors, authenticate, requireMethod, startTrial, database, mercadoPago, recordPayment, environment, json, failure } from '../lib/billing.mjs';
 
 export function checkoutBody(attempt, user, mode = 'production') {
   return {
@@ -7,7 +7,7 @@ export function checkoutBody(attempt, user, mode = 'production') {
     payer: { email: mode === 'test' ? 'test_payer@example.com' : user.email, ...(mode === 'test' ? { first_name: 'APRO' } : {}) },
   };
 }
-export default async function handler(request) {
+async function handler(request) {
   try {
     requireMethod(request, 'POST');
     const user = await authenticate(request);
@@ -34,3 +34,5 @@ export default async function handler(request) {
     return json({ qrCode: method.qr_code || '', qrCodeBase64: method.qr_code_base64 || '', expiresAt: attempt.expires_at, status: order.status });
   } catch (error) { return failure(error); }
 }
+
+export default request => withCors(request, handler);

@@ -1,6 +1,6 @@
-import { authenticate, requireMethod, startTrial, database, mercadoPago, recordPayment, accessStatus, environment, json, failure } from '../lib/billing.mjs';
+import { withCors, authenticate, requireMethod, startTrial, database, mercadoPago, recordPayment, accessStatus, environment, json, failure } from '../lib/billing.mjs';
 
-export default async function handler(request) {
+async function handler(request) {
   try {
     requireMethod(request, 'GET');
     const user = await authenticate(request);
@@ -16,3 +16,5 @@ export default async function handler(request) {
     return json({ ...accessStatus(account, paid), environment: mode });
   } catch (error) { return failure(error); }
 }
+
+export default request => withCors(request, handler);

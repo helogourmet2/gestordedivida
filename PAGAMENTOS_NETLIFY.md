@@ -94,7 +94,7 @@ O repositório contém netlify.toml com build npm run build, publicação dist e
 
 O aplicativo precisa de internet para consultar o acesso ao entrar. Após terminar o teste, os registros não são apagados e Configurações permanece acessível para exportação. A compra fica vinculada à conta Google, não ao aparelho.
 
-O domínio antigo Firebase não hospeda Netlify Functions. Esta versão de cobrança deve ser usada pelo domínio Netlify; não ative VITE_BILLING_ENABLED=true em um deploy do Firebase sem configurar um backend equivalente. O armazenamento local é separado por domínio; entre com a mesma conta e confira a sincronização e exporte os registros antes de migrar o uso diário.
+O frontend também pode ser publicado no Firebase com VITE_BILLING_ENABLED=true e VITE_BILLING_API_URL=https://guileless-baklava-7ff1a1.netlify.app durante a compilação. As funções ficam no Netlify e aceitam chamadas dos domínios Firebase configurados no código, sempre exigindo o token de login do usuário. Antes de ativar, confirme /.netlify/functions/billing-health: deve responder {"ready":true}. Nenhuma chave de pagamento é necessária no Firebase Hosting. A cobrança continua vinculada à conta Google e os registros locais são preservados no mesmo endereço.
 
 ## Referências oficiais
 

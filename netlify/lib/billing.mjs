@@ -95,3 +95,23 @@ export function verifyWebhook(request, secret) {
   const expected = createHmac('sha256', secret).update(`id:${id.toLowerCase()};request-id:${requestId};ts:${signature.ts};`).digest();
   return timingSafeEqual(expected, Buffer.from(signature.v1, 'hex'));
 }
+
+// Apenas os domínios do aplicativo podem chamar a API pelo navegador.
+const allowedOrigins = new Set([
+  'https://gestor-dedividas.web.app',
+  'https://gestor-dedividas.firebaseapp.com',
+  'https://guileless-baklava-7ff1a1.netlify.app',
+]);
+export async function withCors(request, handler) {
+  const origin = request.headers.get('origin');
+  if (origin && !allowedOrigins.has(origin)) return json({ error: 'Origem não permitida.' }, 403);
+  const response = request.method === 'OPTIONS' ? new Response(null, { status: 204 }) : await handler(request);
+  if (origin) {
+    response.headers.set('Access-Control-Allow-Origin', origin);
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+    response.headers.set('Access-Control-Max-Age', '600');
+    response.headers.set('Vary', 'Origin');
+  }
+  return response;
+}
