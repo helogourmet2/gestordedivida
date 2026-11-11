@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import BillingPanel from '../components/BillingPanel';
 import { Bell, BellOff, Trash2, Download, ChevronRight, Info, Smartphone, Lock, LockOpen, X, Delete, FlaskConical, CheckCircle, XCircle, Loader, AlertCircle, RefreshCw } from 'lucide-react';
 import { useNotifications } from '../hooks/useNotifications';
 import { requestFCMToken, auth } from '../lib/firebase';
@@ -343,6 +344,8 @@ export default function Config() {
       <h2 className="text-sm font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
         Configurações
       </h2>
+
+      <BillingPanel />
 
       {/* Segurança */}
       <section>

@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import BottomNav from './BottomNav';
 import FAB from './FAB';
+import { useBilling } from '../hooks/useBilling';
 import { useState } from 'react';
 import DebtForm from './DebtForm';
 import ReceivableForm from './ReceivableForm';
@@ -8,6 +9,7 @@ import { useAuth } from '../hooks/useAuth';
 
 export default function Layout() {
   const { pathname } = useLocation();
+  const billing = useBilling();
   const Form = pathname === '/a-receber' ? ReceivableForm : DebtForm;
   const [showForm, setShowForm] = useState(false);
   const { user, logout } = useAuth();
@@ -43,7 +45,7 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      <FAB onClick={() => setShowForm(true)} />
+      {(!billing?.enabled || billing.status?.allowed) && <FAB onClick={() => setShowForm(true)} />}
       <BottomNav />
 
       {showForm && <Form onClose={() => setShowForm(false)} />}

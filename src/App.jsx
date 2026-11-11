@@ -1,5 +1,6 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Layout from './components/Layout';
+import BillingProvider from './components/BillingProvider';
 import AuthGuard from './components/AuthGuard';
 import Dashboard from './pages/Dashboard';
 import Calendario from './pages/Calendario';
@@ -30,5 +31,5 @@ const router = createBrowserRouter([
 ]);
 
 export default function App() {
-  return <RouterProvider router={router} />;
+  return <BillingProvider><RouterProvider router={router} /></BillingProvider>;
 }

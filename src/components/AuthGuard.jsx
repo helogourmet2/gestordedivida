@@ -2,6 +2,7 @@ import { useAuth } from '../hooks/useAuth';
 import { usePin } from '../hooks/usePin';
 import Login from '../pages/Login';
 import PinScreen from './PinScreen';
+import BillingGate from './BillingGate';
 
 // Tela de carregamento inicial
 function Splash() {
@@ -41,5 +42,5 @@ export default function AuthGuard({ children }) {
   }
 
   // 4. Tudo ok → renderiza o app
-  return children;
+  return <BillingGate>{children}</BillingGate>;
 }
