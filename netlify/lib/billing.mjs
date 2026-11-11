@@ -41,7 +41,7 @@ export async function database(path, options = {}) {
     ...options, signal: AbortSignal.timeout(12000),
     headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', Prefer: 'return=representation', ...options.headers },
   });
-  if (!response.ok) throw new Error('Billing database unavailable');
+  if (!response.ok) throw Object.assign(new Error('Billing database unavailable'), { backendStatus: response.status });
   return response.status === 204 ? null : response.json();
 }
 export async function mercadoPago(path, options = {}) {

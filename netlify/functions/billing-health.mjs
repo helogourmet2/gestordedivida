@@ -12,7 +12,7 @@ async function handler(request) {
   try {
     await database('billing_accounts?select=user_id&limit=0');
     await database('billing_payments?select=id,mp_order_id,mp_updated_at&limit=0');
-  } catch { return json({ ready: false, reason: 'database' }, 503); }
+  } catch (error) { return json({ ready: false, reason: 'database', statusCode: error.backendStatus || null }, 503); }
   try { await mercadoPago('/users/me'); }
   catch { return json({ ready: false, reason: 'mercadopago' }, 503); }
   return json({ ready: true });
